@@ -1,0 +1,16 @@
+{
+  "modules": [
+    {
+      "module_code": "T-15-STD",
+      "quantity": 1
+    }
+  ],
+  "options": [],
+  "site": {
+    "region": null,
+    "distance_km": null,
+    "crane_required": null,
+    "foundation_type": null
+  },
+  "pricing_date": "2026-05-05"
+}

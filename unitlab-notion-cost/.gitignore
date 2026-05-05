@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+.claude/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports / 임시
+reports/*.json
+!reports/.gitkeep
+
+# Local DB symlink (운영 DB는 unitlab-cost-analysis 쪽)
+*.db

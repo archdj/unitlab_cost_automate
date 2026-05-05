@@ -1,0 +1,4 @@
+source_type,source_value,material_id,material_name,mapping_status,mapping_confidence,rule_name,reviewer,reviewed_at,note
+payment,item_name_raw sample,mat-0001,standard material name,candidate,0.5,,,,replace with real data
+bim,material_name_raw sample,mat-0001,standard material name,candidate,0.5,,,,replace with real data
+

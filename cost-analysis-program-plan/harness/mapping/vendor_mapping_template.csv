@@ -1,0 +1,3 @@
+source_vendor_name,source_business_no,vendor_id,vendor_name,mapping_status,mapping_confidence,reviewer,reviewed_at,note
+sample vendor,,vendor-0001,standard vendor name,candidate,0.5,,,replace with real data
+

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+.claude/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 자동 생성 리포트 (재실행으로 갱신)
+**/reports/*.json
+
+# DB / 백업 (운영 DB는 별도 repo)
+*.db
+*.db-journal
+*.db.bak
+
+# Excel BoQ 출력
+*.xlsx

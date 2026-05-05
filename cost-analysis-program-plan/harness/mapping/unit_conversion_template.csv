@@ -1,0 +1,4 @@
+source_unit,target_unit,multiplier,status,note
+m3,m3,1,confirmed,same unit
+㎥,m3,1,candidate,confirm symbol normalization
+

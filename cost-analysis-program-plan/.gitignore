@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+.claude/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Harness 임시 출력
+harness/reports/*.json
+!harness/reports/.gitkeep
+
+# DB
+*.db
