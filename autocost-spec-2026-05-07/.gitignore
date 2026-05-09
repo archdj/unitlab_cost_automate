@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+.claude/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Harness 임시 출력
+harness/reports/*.json
+!harness/reports/.gitkeep
+
+# 모델 backtest/예측 출력
+reports/*.json
+reports/*.csv
+!reports/.gitkeep
+
+# DB / 모델 binary
+*.db
+*.pkl
+
+# Notion 토큰 / .env
+.env
+.env.*
+!.env.example

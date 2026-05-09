@@ -1,0 +1,21 @@
+pattern,target_work_code,confidence,note
+# === FUR(가구) 18 row 재분류 ===
+# 데크 자재 → EXT-DECK
+데크,EXT-DECK,high,데크/데크각관/데크클립/데크화스너/데크골조/데크잡자재
+# 처마 자재 → EXT-ROOF (지붕공사)
+처마,EXT-ROOF,high,처마/처마하부마감/처마 골조 — 지붕 외피
+# 가전 → FUR-KITCH (주방가구가 가장 가까움)
+냉장고,FUR-KITCH,medium,주방 빌트인 가전 — 별도 카테고리 없음
+세탁기,FUR-KITCH,medium,세탁기 빌트인 — 별도 카테고리 없음
+# 수전/거울 → FUR-BATH (욕실)
+수전,FUR-BATH,high,부엌수전이라도 수전류는 욕실 카테고리에 가까움
+조명거울,FUR-BATH,medium,욕실 화장대 거울
+# 붙박이/선반 → FUR-BUILT
+무지주선반,FUR-BUILT,high,벽 선반 — 붙박이 가구
+# === FIN-LGS(경량) 일부 재분류 ===
+목창호,FUR-DOOR,medium,목재 창호는 실내문 카테고리가 더 적합
+손끼임,FUR-DOOR,low,도어 부속자재
+스토퍼,FUR-DOOR,low,도어 부속자재
+# === FIN-PANEL(판넬) 일부 재분류 ===
+도막방수,FIN-WTP,high,우레탄폼/도막방수/이지씰
+이지씰,FIN-WTP,high,방수 자재

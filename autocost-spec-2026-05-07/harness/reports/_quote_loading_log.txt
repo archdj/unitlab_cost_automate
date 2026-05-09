@@ -1,0 +1,83 @@
+=== sidecar 적재 ===
+  inserted: 588
+  skipped (no item_name): 0
+
+=== source × work_code line 분포 ===
+  excel  ?            n=149  amt=168.1M
+  excel  FUR          n=179  amt= 62.5M
+  excel  STR-ST       n=  9  amt= 27.1M
+  pdf    ?            n=116  amt= 23.7M
+  excel  FIN-CARP     n= 60  amt= 16.1M
+  excel  FIN-FLOOR    n= 18  amt= 15.3M
+  pdf    FIN-PANEL    n=  4  amt= 14.5M
+  pdf    EXT-WIN      n= 15  amt= 12.3M
+  excel  SITE-DEMO    n=  6  amt=  9.4M
+  excel  EXT-DECK     n=  2  amt=  5.9M
+  pdf    MEP-HVAC     n= 11  amt=  4.2M
+  excel  MEP-HVAC     n=  5  amt=  2.7M
+  pdf    FUR-DOOR     n=  1  amt=  0.0M
+  pdf    MEP-ELEC     n= 13  amt=  0.0M
+
+=== project별 line 합 ===
+  N-UNMATCHED                     n=104  amt=106.9M
+  N-16-T-12                       n= 63  amt= 56.8M
+  ?                               n= 37  amt= 37.6M
+  N-04-S-30                       n= 47  amt= 32.9M
+  N-20-경기-화성시-쌍학리-667             n= 25  amt= 27.5M
+  N-09-H-30                       n= 69  amt= 23.7M
+  N-01-T-15                       n= 55  amt= 14.1M
+  N-19-T-12                       n= 29  amt= 11.7M
+  N-18-T-12                       n= 19  amt= 10.1M
+  N-02-T-12-1                     n=  6  amt=  9.4M
+  N-11-T-12                       n= 39  amt=  9.3M
+  N-10-S-18                       n= 34  amt=  9.0M
+  N-13-T-15-3                     n= 23  amt=  5.9M
+  N-21-서산-부석면-강수리-277             n= 26  amt=  4.5M
+  N-07-U-6-1                      n=  7  amt=  1.8M
+  N-03-농어촌-공사                     n=  5  amt=  0.6M
+
+=== 단가 분포 (work_code × unit, n>=3) ===
+  wc           unit     n        min     median        max  CV
+  ?            -      198         60     144000    4000000  1.85
+  ?            EA      39        250       2640     260000  3.59
+  ?            매        4       3350       6080      12460  0.56
+  EXT-WIN      -        9     450000    4664900   10452600  0.73
+  FIN-CARP     -       60       1000       7000     395000  1.58
+  FIN-FLOOR    -        3      35000      35000     280000  1.21
+  FIN-FLOOR    식        5     200000     250000    1300000  1.09
+  FIN-FLOOR    평        3     165000     165000     175000  0.03
+  FUR          -      165      15000     200000    1600000  0.98
+  FUR          셋        4     225000     680000    1634000  0.94
+  MEP-HVAC     EA      10       5200     260000     355000  0.78
+  SITE-DEMO    -        6      70000     320000     350000  0.52
+  STR-ST       -        9         80       1160       1160  0.35
+
+=== 견적서 vs actual_cost amount 비교 (project × wc) ===
+  견적서 line item amount sum vs 운영 DB actual_costs 재료비 sum
+  N-UNMATCHED              STR-ST     quote= 27.1M ( 9line) actual=  52.7M  ratio=0.51
+  N-04-S-30                EXT-WIN    quote= 10.5M ( 1line) actual=  11.5M  ratio=0.91
+  N-02-T-12-1              SITE-DEMO  quote=  9.4M ( 6line) actual=      ?  ratio=-
+  N-04-S-30                FUR        quote=  8.7M (12line) actual=   1.1M  ratio=7.69
+  N-10-S-18                FUR        quote=  8.6M (21line) actual=   1.5M  ratio=5.72
+  N-09-H-30                FUR        quote=  7.6M (23line) actual=   5.0M  ratio=1.51
+  N-01-T-15                FUR        quote=  7.4M (20line) actual=   3.1M  ratio=2.38
+  N-11-T-12                FUR        quote=  6.2M (19line) actual=   0.3M  ratio=21.76
+  N-04-S-30                FIN-FLOOR  quote=  6.1M ( 5line) actual=      ?  ratio=-
+  N-20-경기-화성시-쌍학리-667      FUR        quote=  6.1M (15line) actual=      ?  ratio=-
+  N-09-H-30                FIN-FLOOR  quote=  6.0M ( 4line) actual=      ?  ratio=-
+  N-09-H-30                FIN-CARP   quote=  5.4M (16line) actual=  10.5M  ratio=0.51
+  N-16-T-12                FUR        quote=  5.0M (17line) actual=      ?  ratio=-
+  N-04-S-30                FIN-CARP   quote=  5.0M (13line) actual=   9.3M  ratio=0.54
+  N-21-서산-부석면-강수리-277      FUR        quote=  4.5M (15line) actual=      ?  ratio=-
+  N-18-T-12                FUR        quote=  4.5M (14line) actual=      ?  ratio=-
+  N-19-T-12                EXT-DECK   quote=  4.2M ( 1line) actual=      ?  ratio=-
+  N-19-T-12                FUR        quote=  3.8M (13line) actual=      ?  ratio=-
+  N-13-T-15-3              FIN-CARP   quote=  3.3M (18line) actual=   5.3M  ratio=0.62
+  N-01-T-15                MEP-HVAC   quote=  3.1M ( 7line) actual=   1.3M  ratio=2.34
+  N-13-T-15-3              MEP-HVAC   quote=  2.6M ( 3line) actual=      ?  ratio=-
+  N-11-T-12                FIN-FLOOR  quote=  2.5M ( 4line) actual=      ?  ratio=-
+  N-01-T-15                FIN-CARP   quote=  2.4M (13line) actual=   3.9M  ratio=0.62
+  N-07-U-6-1               EXT-WIN    quote=  1.8M ( 1line) actual=   1.9M  ratio=0.93
+  N-20-경기-화성시-쌍학리-667      EXT-DECK   quote=  1.7M ( 1line) actual=      ?  ratio=-
+  N-16-T-12                MEP-HVAC   quote=  1.1M ( 6line) actual=   0.1M  ratio=18.95
+  N-03-농어촌-공사              FIN-FLOOR  quote=  0.6M ( 5line) actual=      ?  ratio=-

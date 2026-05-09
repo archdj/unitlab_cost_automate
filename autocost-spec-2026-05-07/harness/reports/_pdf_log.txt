@@ -1,0 +1,20 @@
+﻿python : Traceback (most recent call last):
+At line:2 char:1
++ python "C:\Users\PC\unitlab_autocost\autocost-spec-
+2026-05-07\harness ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceba 
+   ck (most recent call last)::String) [], RemoteEx  
+  ception
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\PC\unitlab_autocost\autocost-spec-20
+26-05-07\harness\scripts\parse_pdf_quotes.py", line 2
+45, in <module>
+    main()
+  File "C:\Users\PC\unitlab_autocost\autocost-spec-20
+26-05-07\harness\scripts\parse_pdf_quotes.py", line 1
+62, in main
+    print(f"견적/명세 PDF: {len(pdfs)}개\n")
+ValueError: I/O operation on closed file.

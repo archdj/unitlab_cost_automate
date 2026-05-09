@@ -1,0 +1,17 @@
+=== 추출 결과 ===
+  extracted: 2810
+  skipped (dir): 0
+  skipped (path too long): 0
+  failed: 0
+
+=== 파일 타입 ===
+  .md       : 1421
+  .pdf      : 592
+  .png      : 364
+  .jpg      : 354
+  .xlsx     : 35
+  .html     : 17
+  .xls      : 12
+  .jpeg     : 9
+  .hwp      : 4
+  .csv      : 2

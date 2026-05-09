@@ -1,0 +1,694 @@
+{
+  "source_filename": "9d26bfdc-0340-4372-9ad1-891ee25a6981_ExportBlock-2552712d-5473-4d51-93ad-34d74fac6537.zip → 개인 페이지 & 공유된 페이지/지출결의/입금요청 c4fcefbcab544ad0bb69be40db0689b9.csv",
+  "source_type": "notion_zip",
+  "sheet_name": null,
+  "sheet_choices": null,
+  "total_rows": 1415,
+  "accepted_rows": 1369,
+  "rejected_rows": 46,
+  "column_mapping": {
+    "raw_description": "프로젝트명_자재명",
+    "actual_quantity": "세금계산서, 견적서,수량산출서",
+    "unit": null,
+    "unit_price": null,
+    "total_amount": "입금액(VAT+)",
+    "work_code_raw": null,
+    "vendor_name": "업체명",
+    "settlement_date": null,
+    "invoice_no": "계산서",
+    "project_name": "유닛하우스 프로젝트",
+    "spec": null
+  },
+  "unmapped_columns": [
+    "선택",
+    "분리",
+    "통장명",
+    "계좌번호",
+    "은행명",
+    "입금자명",
+    "긴급도",
+    "입금 데드라인",
+    "검토요청",
+    "요청자",
+    "요청일",
+    "검토승인",
+    "입금완료",
+    "검토자",
+    "검토일",
+    "입금자",
+    "입금일"
+  ],
+  "preview": [
+    {
+      "row": 1,
+      "raw_description": "화물차 매매금",
+      "actual_quantity": null,
+      "unit": null,
+      "unit_price": null,
+      "total_amount": 10000000.0,
+      "work_code_raw": null,
+      "vendor_name": "윤영현 (https://www.notion.so/3375716699888023abbed4de7517b045?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "기타",
+      "project_name": null,
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 2,
+      "raw_description": "폴딩도어 방충망",
+      "actual_quantity": 7.806920998948955e+52,
+      "unit": null,
+      "unit_price": 1.1666571240090952e-47,
+      "total_amount": 910800.0,
+      "work_code_raw": null,
+      "vendor_name": "씨앤월 (https://www.notion.so/3525716699888015b60cd57c3e28920e?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "경기 성남시 수정구 상적동 2-1 T-12 (https://www.notion.so/2-1-T-12-1e557166998880eeb136c5be4409791d?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 3,
+      "raw_description": "[사천 기존부지 준공 잔금]",
+      "actual_quantity": 7.806920998202604e+26,
+      "unit": null,
+      "unit_price": 6.404573584324928e-21,
+      "total_amount": 5000000.0,
+      "work_code_raw": null,
+      "vendor_name": "드림엔지니어링 (https://www.notion.so/28057166998880a29cdfe7b11ad67b6d?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "사천 숲 유치원 산지 개발 (https://www.notion.so/2ee57166998880528c11eb114864113c?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 4,
+      "raw_description": "[서진원 고객] 계약금 환불",
+      "actual_quantity": 78069209988622.0,
+      "unit": null,
+      "unit_price": 1.280914716756763e-08,
+      "total_amount": 1000000.0,
+      "work_code_raw": null,
+      "vendor_name": "서진원 고객 (https://www.notion.so/3525716699888049a80fccad84f5adab?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": null,
+      "project_name": "[쇼룸] 남곡리 T-12, U-10 (https://www.notion.so/T-12-U-10-2555716699888084a922fb419edc0aef?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 5,
+      "raw_description": "테스트베드 판넬 운반비",
+      "actual_quantity": 7.8069209980998995e+65,
+      "unit": null,
+      "unit_price": 2.395310520569035e-61,
+      "total_amount": 187000.0,
+      "work_code_raw": null,
+      "vendor_name": "개인화물(박순철) (https://www.notion.so/3515716699888045940fed96e8a4cbf1?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "테스트베드 (https://www.notion.so/30d571669988809fa333c7242e4dd293?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 6,
+      "raw_description": "유닛랩 명함_전아름",
+      "actual_quantity": null,
+      "unit": null,
+      "unit_price": null,
+      "total_amount": 15400.0,
+      "work_code_raw": null,
+      "vendor_name": "프린트119 (https://www.notion.so/119-25657166998880c0b132dfaf8c8fd922?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": null,
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 7,
+      "raw_description": "용인 남곡리 전동커튼 보수",
+      "actual_quantity": 7.806920998894792e+57,
+      "unit": null,
+      "unit_price": 2.1135092826398356e-53,
+      "total_amount": 165000.0,
+      "work_code_raw": null,
+      "vendor_name": "더집안 (https://www.notion.so/e614aa685575454d809432545f4df155?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "남곡리 쇼룸 T-12 (https://www.notion.so/T-12-36794ad58b6545f2be0b81b1a77f746b?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 8,
+      "raw_description": "테스트배드 경량 추가",
+      "actual_quantity": 7.806920998999499e+46,
+      "unit": null,
+      "unit_price": 2.2487738766986243e-42,
+      "total_amount": 175560.0,
+      "work_code_raw": null,
+      "vendor_name": "주식회사 화영 (https://www.notion.so/61a8bee3642b40cfa1cc3439be732d51?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "테스트베드 (https://www.notion.so/30d571669988809fa333c7242e4dd293?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 9,
+      "raw_description": "성남 상적동 가구",
+      "actual_quantity": null,
+      "unit": null,
+      "unit_price": null,
+      "total_amount": 4928000.0,
+      "work_code_raw": null,
+      "vendor_name": "나모바치 (https://www.notion.so/c2d199573b8841b18b1ff23a50090558?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "경기 성남시 수정구 상적동 2-1 T-12 (https://www.notion.so/2-1-T-12-1e557166998880eeb136c5be4409791d?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 10,
+      "raw_description": "양평 원덕리 제작비",
+      "actual_quantity": 7.806920998949499e+69,
+      "unit": null,
+      "unit_price": 5.391731260719049e-63,
+      "total_amount": 42092820.0,
+      "work_code_raw": null,
+      "vendor_name": "디자인엠에이 (https://www.notion.so/10e57166998880b4a17ee6ed44a6fd2f?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "양평군 원덕리 346-34_근생_s-18 (https://www.notion.so/346-34_-_s-18-29b571669988800085bcd7e644efcae4?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 11,
+      "raw_description": "성남 상적동 수전 커넥터",
+      "actual_quantity": 7.806920998844943e+51,
+      "unit": null,
+      "unit_price": 1.1143958035808471e-48,
+      "total_amount": 8700.0,
+      "work_code_raw": null,
+      "vendor_name": "bathday (https://www.notion.so/bathday-34f57166998880e2b4f1dc2ae0a424dc?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "무통장입금, 현금영수증",
+      "project_name": "경기 성남시 수정구 상적동 2-1 T-12 (https://www.notion.so/2-1-T-12-1e557166998880eeb136c5be4409791d?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 12,
+      "raw_description": "쌍학리 캐노피",
+      "actual_quantity": null,
+      "unit": null,
+      "unit_price": null,
+      "total_amount": 2200000.0,
+      "work_code_raw": null,
+      "vendor_name": "디자인엠에이 (https://www.notion.so/10e57166998880b4a17ee6ed44a6fd2f?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "경기 화성시 쌍학리 667-5_주택 S-18(박공) (https://www.notion.so/667-5_-S-18-229571669988803a810ed33fcfd5cb0a?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 13,
+      "raw_description": "테스트베드 제작비 6,7주차",
+      "actual_quantity": null,
+      "unit": null,
+      "unit_price": null,
+      "total_amount": 19807260.0,
+      "work_code_raw": null,
+      "vendor_name": "디자인엠에이 (https://www.notion.so/10e57166998880b4a17ee6ed44a6fd2f?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "테스트베드 (https://www.notion.so/30d571669988809fa333c7242e4dd293?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 14,
+      "raw_description": "남곡리 쇼룸 현장공사비",
+      "actual_quantity": null,
+      "unit": null,
+      "unit_price": null,
+      "total_amount": 4463800.0,
+      "work_code_raw": null,
+      "vendor_name": "디자인엠에이 (https://www.notion.so/10e57166998880b4a17ee6ed44a6fd2f?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "남곡리 쇼룸 T-12 (https://www.notion.so/T-12-36794ad58b6545f2be0b81b1a77f746b?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 15,
+      "raw_description": "호텔 시스템 선금",
+      "actual_quantity": 7.806920998084991e+30,
+      "unit": null,
+      "unit_price": 1.689539320717538e-25,
+      "total_amount": 1319010.0,
+      "work_code_raw": null,
+      "vendor_name": "MPMK (https://www.notion.so/MPMK-34f5716699888050ba53d3c6140c7b0a?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "테스트베드 (https://www.notion.so/30d571669988809fa333c7242e4dd293?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 16,
+      "raw_description": "테스트베드 미네랄울, 석고",
+      "actual_quantity": 7.806920998282099e+61,
+      "unit": null,
+      "unit_price": 1.0204445519242505e-55,
+      "total_amount": 7966530.0,
+      "work_code_raw": null,
+      "vendor_name": "라이트필 (https://www.notion.so/34a571669988808088e9f8b5c65ea0ea?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "테스트베드 (https://www.notion.so/30d571669988809fa333c7242e4dd293?pvs=21)",
+      "spec": null,
+      "match_method": "token",
+      "matched_alias": "미네랄울",
+      "matched_material_id": 247,
+      "match_score": 0.667
+    },
+    {
+      "row": 17,
+      "raw_description": "남곡리 쇼룸 냉난방기",
+      "actual_quantity": 7.806920998979097e+67,
+      "unit": null,
+      "unit_price": 9.299440843514854e-63,
+      "total_amount": 726000.0,
+      "work_code_raw": null,
+      "vendor_name": "에어플러스원시스템 (https://www.notion.so/ccfdda3100e9494193469ec7cde2a8a7?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "남곡리 쇼룸 T-12 (https://www.notion.so/T-12-36794ad58b6545f2be0b81b1a77f746b?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 18,
+      "raw_description": "오픈이벤트_장갑",
+      "actual_quantity": null,
+      "unit": null,
+      "unit_price": null,
+      "total_amount": 556600.0,
+      "work_code_raw": null,
+      "vendor_name": "금오종합안전플러스 (https://www.notion.so/2f55716699888073893dd9352125834e?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": null,
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 19,
+      "raw_description": "남곡리 쇼룸 어닝 재설치",
+      "actual_quantity": 7.806920998095884e+50,
+      "unit": null,
+      "unit_price": 2.8180123771414906e-46,
+      "total_amount": 220000.0,
+      "work_code_raw": null,
+      "vendor_name": "주식회사 정문 (https://www.notion.so/51a487f31153485ab11e18fcb491edd6?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": "남곡리 쇼룸 T-12 (https://www.notion.so/T-12-36794ad58b6545f2be0b81b1a77f746b?pvs=21)",
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    },
+    {
+      "row": 20,
+      "raw_description": "유닛랩 명함_하성민",
+      "actual_quantity": null,
+      "unit": null,
+      "unit_price": null,
+      "total_amount": 15400.0,
+      "work_code_raw": null,
+      "vendor_name": "프린트119 (https://www.notion.so/119-25657166998880c0b132dfaf8c8fd922?pvs=21)",
+      "settlement_date": null,
+      "invoice_no": "전자세금계산서",
+      "project_name": null,
+      "spec": null,
+      "match_method": "none",
+      "matched_alias": null,
+      "matched_material_id": null,
+      "match_score": 0.0
+    }
+  ],
+  "issues": [
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 34
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 293
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 324
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 336
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 337
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 339
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 433
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 483
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 486
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 492
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 502
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 752
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 898
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 899
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 902
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 903
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 904
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 905
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 909
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 947
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 972
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 973
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 991
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 992
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 993
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1012
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1013
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1014
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1021
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1022
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1023
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1027
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1028
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1029
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1030
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1031
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1032
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1033
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1034
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1035
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1036
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1037
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1038
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1084
+    },
+    {
+      "severity": "warn",
+      "code": "negative_amount",
+      "message": "음수 금액",
+      "row": 1188
+    },
+    {
+      "severity": "block",
+      "code": "missing_required",
+      "message": "필수 필드 'raw_description' 누락",
+      "row": 1197
+    },
+    {
+      "severity": "block",
+      "code": "no_amount_signal",
+      "message": "total_amount/unit_price/actual_quantity 모두 비어있음",
+      "row": 1214
+    }
+  ],
+  "alias_stats": {
+    "attempted": 20,
+    "matched_exact": 0,
+    "matched_token": 1,
+    "match_rate": 0.05
+  },
+  "saved_to": null
+}

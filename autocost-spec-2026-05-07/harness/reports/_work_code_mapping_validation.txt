@@ -1,0 +1,62 @@
+=== 우리 CATEGORY_KEYWORDS 검증 ===
+keyword → work_code (work_codes 테이블 존재 여부)
+  ⚠️  가구         → FUR (level3, normalize 필요)
+
+=== 우리 vs 운영 ETL WORK_MAP 비교 ===
+같은 키워드인데 다른 work_code 매핑
+  '도어' → 우리 FUR-DOOR         vs ETL '04. 폴딩도어' → EXT-WIN
+  '보일러' → 우리 MEP-HVAC         vs ETL '24. 보일러' → MEP-HVAC-004
+  '에어컨' → 우리 MEP-HVAC         vs ETL '32. 에어컨' → MEP-HVAC-001
+  '징크' → 우리 EXT-ROOF         vs ETL '09. 징크후레싱' → EXT-ROOF-003
+  '후레싱' → 우리 EXT-ROOF         vs ETL '09. 징크후레싱' → EXT-ROOF-003
+  '바닥' → 우리 FIN-FLOOR        vs ETL '11. 바닥난방' → MEP-PLMB-004
+  '도배' → 우리 FIN-WALL         vs ETL '21. 도배' → FIN-WALL-003
+  '냉장고' → 우리 FUR-KITCH        vs ETL '33. 냉장고' → FUR
+  '세탁기' → 우리 FUR-KITCH        vs ETL '34. 세탁기' → FUR
+  '난방' → 우리 MEP-HVAC         vs ETL '11. 바닥난방' → MEP-PLMB-004
+  '운반' → 우리 SITE-MISC        vs ETL '26. 운반' → SITE-MISC-002
+불일치 키워드: 11
+
+=== PROJ_KEYWORDS 검증 ===
+
+=== ETL WORK_MAP 의 unique work_codes 중 work_codes 테이블 매칭 ===
+
+=== work_codes 테이블 level=2 코드 전체 (38개) ===
+  EXT-ACC      무장애(베리어프리)            (EXTERIOR)
+  EXT-CAN      캐노피/차양                (EXTERIOR)
+  EXT-CLAD     외장재공사                 (EXTERIOR)
+  EXT-DECK     외부 데크                 (EXTERIOR)
+  EXT-ROOF     지붕공사                  (EXTERIOR)
+  EXT-WIN      창호공사                  (EXTERIOR)
+  FIN-CARP     목공사                   (FINISH)
+  FIN-CEIL     천장마감                  (FINISH)
+  FIN-FLOOR    바닥마감                  (FINISH)
+  FIN-INS      단열공사                  (FINISH)
+  FIN-LGS      경량철골 파티션              (FINISH)
+  FIN-PAINT    도장공사                  (FINISH)
+  FIN-PANEL    샌드위치 판넬               (FINISH)
+  FIN-TILE     타일공사                  (FINISH)
+  FIN-WALL     벽체마감                  (FINISH)
+  FIN-WTP      방수공사                  (FINISH)
+  FUR-BATH     욕실공사                  (FURNITURE)
+  FUR-BUILT    붙박이장                  (FURNITURE)
+  FUR-DOOR     실내문/문틀                (FURNITURE)
+  FUR-KITCH    주방가구                  (FURNITURE)
+  FUR-SOFT     소프트퍼니싱                (FURNITURE)
+  MEP-ELEC     전기공사                  (MEP)
+  MEP-FIRE     소방공사                  (MEP)
+  MEP-HVAC     공조설비                  (MEP)
+  MEP-IOT      IoT/스마트홈              (MEP)
+  MEP-PLMB     배관공사                  (MEP)
+  MEP-SIGN     사이니지                  (MEP)
+  SITE-DEMO    철거공사                  (SITE)
+  SITE-EARTH   토공사                   (SITE)
+  SITE-LAND    조경공사                  (SITE)
+  SITE-MISC    부대공사                  (SITE)
+  SITE-MOD     모듈 설치/양중              (SITE)
+  STR-ALC      ALC공사                 (STRUCTURE)
+  STR-CLT      CLT공사                 (STRUCTURE)
+  STR-FND      기초공사                  (STRUCTURE)
+  STR-MISC     기타철물                  (STRUCTURE)
+  STR-RC       철근콘크리트공사              (STRUCTURE)
+  STR-ST       철골공사                  (STRUCTURE)

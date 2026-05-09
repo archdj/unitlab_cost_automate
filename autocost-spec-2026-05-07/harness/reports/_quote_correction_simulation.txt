@@ -1,0 +1,36 @@
+=== sidecar quote sums ===
+  cells: 27
+  total quote amount: 155.4M
+
+projects: 8
+baseline samples: 267
+corrected samples: 271  (n_corrected_cells=11, total_correction=33.1M)
+
+=== wMAPE 비교 ===
+  metric                      baseline  corrected    delta
+  전체 wMAPE                       21.8%      23.0%    +1.2pp
+  자재 wMAPE                       26.3%      21.7%    -4.6pp
+
+=== cost_type 비교 ===
+  ct              b_n  b_wMAPE c_n  c_wMAPE
+  제작+현장설치 비         1   100.0%   1   100.0%
+  재료비              98    39.9% 102    43.4%
+  경비               52    50.9%  52    50.9%
+  기타                4   131.2%   4   131.2%
+  노무비              70    55.1%  70    55.1%
+  재료비+노무비          42    53.7%  42    53.7%
+
+=== work_code 비교 (top 12 abs_diff) ===
+  wc            b_wMAPE  c_wMAPE   b_abs   c_abs
+  FUR             59.0%    61.2%   36.8M   51.6M
+  EXT-WIN         56.5%    56.2%   40.8M   40.5M
+  SITE-MISC       90.9%    90.9%   36.2M   36.2M
+  SITE-MOD        82.9%    82.9%   35.1M   35.1M
+  FIN-LGS         64.9%    64.9%   29.2M   29.2M
+  FIN-PANEL       30.8%    30.8%   28.1M   28.1M
+  EXT-CLAD        56.1%    56.1%   26.9M   26.9M
+  SITE-EARTH     100.0%   100.0%   20.0M   20.0M
+  FIN-CARP        40.8%    41.5%   15.0M   13.8M
+  STR-ST          14.3%    14.3%   14.1M   14.1M
+  MEP-HVAC        62.2%    67.1%   10.2M   13.9M
+  MEP-PLMB        45.6%    45.6%   11.7M   11.7M

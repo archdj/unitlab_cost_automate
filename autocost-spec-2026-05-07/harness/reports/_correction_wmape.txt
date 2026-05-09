@@ -1,0 +1,99 @@
+=== 자재 actual_cost rows: 483 ===
+  vendor 정규화 sample (5개):
+    제목 없음                           desc='쇼룸_판넬'
+    금강방화문                           desc='쇼룸_현관문 잔금'
+    엑스젠테크놀리지                        desc='쇼룸_스크린'
+    식회사 화영                          desc='쇼룸_경량 부자재'
+    금강철강산업                          desc='쇼룸_골조'
+
+=== 견적서 lookup ===
+  unique (vendor, project) cells: 39
+  sample (5개):
+    (거명이앤씨, N-04-S-30) → 1 wcs: [('EXT-WIN', 0)]
+    (거명이앤씨, N-07-U-6-1) → 1 wcs: [('EXT-WIN', 0)]
+    (거명이엔씨, N-09-H-30) → 1 wcs: [('EXT-WIN', 0)]
+    (나모바치, N-01-T-15) → 1 wcs: [('FUR', 7438)]
+    (나모바치, N-04-S-30) → 1 wcs: [('FUR', 8670)]
+
+=== 재분류 결과 ===
+  total rows: 483
+  changed (corrected != original): 83
+  kept (original confirmed): 298
+  no evidence (변경 없음): 102
+
+=== evidence source 분포 ===
+  raw_desc            : 367
+  no_evidence         : 102
+  raw_desc+quote      : 14
+
+=== 재분류 from → to (top 15) ===
+  FIN-PANEL    → EXT-ROOF      n=11  amt= 30.4M
+  FIN-CARP     → FIN-FLOOR     n= 6  amt= 12.6M
+  FUR          → EXT-DECK      n= 9  amt=  8.2M
+  STR-ST       → STR-MISC      n= 3  amt=  2.8M
+  FIN-CARP     → EXT-WIN       n= 3  amt=  2.2M
+  FIN-CARP     → FUR-DOOR      n= 3  amt=  2.1M
+  FUR          → FUR-KITCH     n= 2  amt=  1.5M
+  MEP-PLMB     → MEP-HVAC      n= 1  amt=  1.4M
+  FIN-LGS      → EXT-WIN       n= 2  amt=  1.2M
+  FUR          → EXT-ROOF      n= 3  amt=  1.0M
+  MEP-ELEC     → MEP-SIGN      n= 9  amt=  1.0M
+  FUR-BATH     → FIN-TILE      n= 1  amt=  0.9M
+  FIN-CARP     → STR-MISC      n= 4  amt=  0.6M
+  SITE-MISC    → STR-MISC      n= 1  amt=  0.5M
+  FIN-PANEL    → FIN-WTP       n= 2  amt=  0.4M
+
+=== 재분류 sample (top 20 by amount) ===
+  [N-UNMATCHED       ] FIN-PANEL  → EXT-ROOF   amt= 12643K  conf=0.85  desc='테스트베드 판넬, 후레싱'
+  [N-20-경기-화성시-쌍학리-66] FIN-PANEL  → EXT-ROOF   amt=  5981K  conf=0.85  desc='화성 쌍학리 바닥지붕판넬'
+  [N-19-T-12         ] FIN-PANEL  → EXT-ROOF   amt=  3967K  conf=0.85  desc='성남 상적동 바닥지붕판넬'
+  [N-18-T-12         ] FIN-PANEL  → EXT-ROOF   amt=  3869K  conf=0.85  desc='금산 마전리 바닥지붕판넬'
+  [N-04-S-30         ] FIN-CARP   → FIN-FLOOR  amt=  3800K  conf=0.85  desc='다랑논_리모델링월, 솔리드웜 100'
+  [N-09-H-30         ] FIN-CARP   → FIN-FLOOR  amt=  3800K  conf=0.85  desc='제주_리모델링월'
+  [N-02-T-12-1       ] FIN-CARP   → FIN-FLOOR  amt=  3539K  conf=0.85  desc='리모델링월'
+  [N-09-H-30         ] FUR        → EXT-DECK   amt=  3394K  conf=0.85  desc='제주_데크'
+  [N-01-T-15         ] FIN-PANEL  → EXT-ROOF   amt=  3318K  conf=0.85  desc='홍천_우레탄판넬(지붕)'
+  [N-UNMATCHED       ] STR-ST     → STR-MISC   amt=  2263K  conf=0.85  desc='테스트베드 플레이트, 인양고리'
+  [N-01-T-15         ] FUR        → EXT-DECK   amt=  1772K  conf=0.85  desc='홍천_데크'
+  [N-21-서산-부석면-강수리-27] MEP-PLMB   → MEP-HVAC   amt=  1402K  conf=0.85  desc='서산 강수리_바닥난방'
+  [N-01-T-15         ] FIN-CARP   → FIN-FLOOR  amt=  1140K  conf=0.85  desc='홍천_리모델링월'
+  [N-09-H-30         ] FUR        → EXT-DECK   amt=  1112K  conf=0.85  desc='제주_데크각관'
+  [N-15-청주-남이면-가마리-산6] FUR-BATH   → FIN-TILE   amt=   934K  conf=0.85  desc='청주 남이면_도기, 타일'
+  [N-02-T-12-1       ] FIN-CARP   → FUR-DOOR   amt=   915K  conf=0.60  desc='쇼룸_예림도어'
+  [N-01-T-15         ] FUR        → EXT-DECK   amt=   880K  conf=0.85  desc='홍천 데크 각관'
+  [N-10-S-18         ] FUR        → FUR-KITCH  amt=   811K  conf=0.85  desc='루떼르_냉장고'
+  [N-19-T-12         ] FIN-CARP   → EXT-WIN    amt=   749K  conf=0.85  desc='성남_목창호'
+  [N-11-T-12         ] FIN-CARP   → EXT-WIN    amt=   712K  conf=0.85  desc='청주 미원면_목창호'
+
+=== corrected actual 로 LOO backtest ===
+  baseline samples : 267
+  corrected samples: 283
+
+=== wMAPE 비교 ===
+  metric                      baseline  corrected    delta
+  전체 wMAPE                       21.8%      21.5%    -0.3pp
+  자재 wMAPE                       26.3%      26.5%    +0.2pp
+
+=== cost_type 비교 (셀-단위 wMAPE) ===
+  ct               b_wMAPE  c_wMAPE    delta
+  노무비                55.1%    55.1%   +0.0pp
+  경비                 50.9%    50.9%   +0.0pp
+  재료비                39.9%    44.2%   +4.4pp
+  제작+현장설치 비         100.0%   100.0%   +0.0pp
+  기타                131.2%   131.2%   +0.0pp
+  재료비+노무비            53.7%    53.7%   +0.0pp
+
+=== 자재 work_code 비교 (top 12 by abs_diff) ===
+  wc            b_wMAPE  c_wMAPE   b_abs   c_abs  notes
+  EXT-WIN         56.5%    59.5%   40.8M   43.4M
+  FUR             59.0%    54.3%   36.8M   31.1M
+  SITE-MISC       90.9%    90.9%   36.2M   36.2M
+  SITE-MOD        82.9%    82.9%   35.1M   35.1M
+  FIN-PANEL       30.8%    34.8%   28.1M   30.6M
+  FIN-LGS         64.9%    64.9%   29.2M   29.2M
+  EXT-CLAD        56.1%    56.1%   26.9M   26.9M
+  SITE-EARTH     100.0%   100.0%   20.0M   20.0M
+  FIN-CARP        40.8%    49.3%   15.0M   16.2M
+  STR-ST          14.3%    13.5%   14.1M   13.2M
+  EXT-ROOF        40.0%    63.1%    7.3M   13.8M
+  MEP-PLMB        45.6%    42.4%   11.7M   10.3M

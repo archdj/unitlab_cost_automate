@@ -1,0 +1,4 @@
+source_value,target_work_code,mapping_status,confidence,reviewer,reviewed_at,note
+레미콘,A1.01,candidate,0.5,,,replace with real data
+콘크리트,A1.01,candidate,0.5,,,동의어 후보
+철근,A1.02,candidate,0.5,,,
