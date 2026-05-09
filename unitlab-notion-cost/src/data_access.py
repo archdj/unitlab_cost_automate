@@ -1,15 +1,33 @@
-"""Read-only access to the operational DB. No IFC tables touched."""
+"""Read-only access to the operational DB. No IFC tables touched.
+
+v1 함수 (`load_actual_samples`, `list_projects_for_backtest`): 운영 DB의 actual_costs만 사용.
+  - cost_type=source_ref 매핑 버그 (운영 DB에 cost_type 컬럼 부재).
+  - 학습 데이터 N=8 LOO.
+
+v2 함수 (`load_actual_samples_v2`, `list_projects_for_backtest_v2`): sidecar autocost_enriched.db 사용.
+  - cost_type은 노션 '선택' 컬럼 직접 매핑 (MAT/LAB/EXP/MIXED/ETC/RECUR/EXCL/OTHER).
+  - 1420 cost rows / 16 학습 가능 프로젝트 (cost_total >= 49M).
+  - module info는 운영 module_types에서 module_code_hint로 매칭.
+"""
 from __future__ import annotations
 
+import hashlib
+import re
 import sqlite3
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Iterable
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DB_PATH = REPO_ROOT.parent / "unitlab-cost-analysis" / "db" / "cost_analysis.db"
+# 운영 DB는 unitlab_autocost와 동일 레벨의 sister directory
+DB_PATH = REPO_ROOT.parent.parent / "unitlab-cost-analysis" / "db" / "cost_analysis.db"
+
+# Sidecar enriched DB (autocost-spec-2026-05-07/harness/data/autocost_enriched.db)
+ENRICHED_DB_PATH = (
+    REPO_ROOT.parent / "autocost-spec-2026-05-07" / "harness" / "data"
+    / "autocost_enriched.db"
+)
 
 
 if sys.platform == "win32":
@@ -23,6 +41,19 @@ def connect_readonly() -> sqlite3.Connection:
     if not DB_PATH.exists():
         raise FileNotFoundError(f"운영 DB 없음: {DB_PATH}")
     uri = f"file:{DB_PATH.as_posix()}?mode=ro"
+    con = sqlite3.connect(uri, uri=True)
+    con.row_factory = sqlite3.Row
+    return con
+
+
+def connect_enriched() -> sqlite3.Connection:
+    """Sidecar enriched DB (autocost_enriched.db) 연결. Read mode (write는 build script만)."""
+    if not ENRICHED_DB_PATH.exists():
+        raise FileNotFoundError(
+            f"sidecar 없음: {ENRICHED_DB_PATH}\n"
+            "먼저 `python autocost-spec-2026-05-07/harness/scripts/build_enriched_db.py` 실행."
+        )
+    uri = f"file:{ENRICHED_DB_PATH.as_posix()}?mode=ro"
     con = sqlite3.connect(uri, uri=True)
     con.row_factory = sqlite3.Row
     return con
@@ -152,10 +183,299 @@ def list_projects_for_backtest(con: sqlite3.Connection) -> list[dict]:
     """)]
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# v2: sidecar 기반 — Q10 A 부활 (cost_type=노션 '선택') + 1420 cost rows + 16 projects
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 노션 module_code_hint → 운영 module_types.module_code 매핑.
+# 정확히 동일한 모듈이 운영에 있을 때만 매핑. 없으면 None → estimate fallback.
+# (이전엔 "가장 가까운 BESPOKE"로 잘못 매핑해 큰 면적 오차 발생, 2026-05-09 정정)
+MODULE_HINT_TO_OP_CODE = {
+    "T-12":   "T-12-2025",      # 39.7 m²
+    "T-15":   "T-15-STD",       # 49.6 m²
+    "T-15-3": "T-15-STD",       # T-15 variant (노션 property상 T-12지만 T-15 더 정확)
+    "T-9":    "T-9-STD",        # 29.8 m²
+    "T-10":   "T-10-SHW",       # 33.1 m²
+    "S-18":   "S-18-2025",      # 59.5 m²
+    "H-30":   "H-30-2025",      # 99.2 m²
+    "U-6":    "U-6-1-2025",     # 19.8 m²
+    "U-6-1":  "U-6-1-2025",
+    "ST-STD": "ST-STD-2025",    # 49 m² standard
+    # 운영 entry 없는 module — None으로 두고 estimate fallback 사용:
+    # "S-15"  → 50 m² estimate
+    # "S-30"  → 99 m² estimate
+    # "U-9"   → 30 m² estimate
+    # "U-10"  → 33 m² estimate
+    # "10평:20EA" → 33 m² estimate (단지 분양은 단일 모듈 추정의 한계)
+}
+
+# 학습 입력 필터: 노션 '선택' 컬럼 → cost_type 정규화 후 학습 가능 여부.
+LEARNABLE_COST_TYPES = ("MAT", "LAB", "EXP", "MIXED", "ETC")  # RECUR/EXCL/OTHER 제외
+LEARNABLE_STATUS = ("입금완료",)                                # 결제 완료된 행만 (기본)
+LEARNABLE_STATUS_RELAXED = ("입금완료", "진행 전")               # 진행 중 프로젝트 cost 회수 (Q12 2-A)
+PROJECT_COST_THRESHOLD = 49_000_000                             # cost_total ≥ 49M (Top 16 컷)
+
+
+def _project_int_id(notion_page_id: str) -> int:
+    """notion_page_id (UUID) → 안정된 정수 project_id (Pool key 호환).
+    SHA1 첫 8 hex → 32-bit int."""
+    h = hashlib.sha1(notion_page_id.encode("utf-8")).hexdigest()[:8]
+    return int(h, 16)
+
+
+def _estimate_module_meta(module_size_text: str | None) -> dict | None:
+    """노션 module_size 텍스트(예: 'S-30', 'U-9', 'T-15-3')에서 평형/면적/등급 추정.
+    운영 module_types에 매칭 entry가 없을 때 fallback.
+
+    Convention: 모듈 코드 숫자 = 평형. 1평 ≈ 3.3 m².
+    Grade는 표준 모델(T-12-2025 등)이 ESSENTIAL, 그 외는 BESPOKE.
+    """
+    if not module_size_text:
+        return None
+    s = module_size_text.strip().upper()
+    # T-숫자, S-숫자, U-숫자, H-숫자 패턴
+    m = re.match(r"^([THSUH])-?(\d+)", s)
+    if m:
+        type_code, size = m.group(1), int(m.group(2))
+        pyeong = float(size)
+        area_m2 = round(pyeong * 3.3, 1)
+        return {
+            "floor_area_m2":   area_m2,
+            "pyeong":          pyeong,
+            "structure_type":  "STEEL",
+            "grade":           "BESPOKE",  # 운영 entry가 없으면 custom
+        }
+    # 10평:20EA 같은 패턴
+    m = re.match(r"^(\d+)평", s)
+    if m:
+        pyeong = float(m.group(1))
+        return {
+            "floor_area_m2":  round(pyeong * 3.3, 1),
+            "pyeong":         pyeong,
+            "structure_type": "STEEL",
+            "grade":          "BESPOKE",
+        }
+    return None
+
+
+def _classify_work_code_category(work_code_text: str | None) -> str:
+    """노션 '공종' 텍스트 → 운영 work_codes.category 4종 정규화.
+    예: '01. 골조' → STRUCTURE, '02. 판넬' → FINISH, '05. 전기' → MEP, ..."""
+    if not work_code_text:
+        return "UNKNOWN"
+    s = work_code_text.lower()
+    if any(k in s for k in ["골조", "철골", "기초", "alc", "잡철", "01.", "structure"]):
+        return "STRUCTURE"
+    if any(k in s for k in ["전기", "설비", "공조", "환기", "배관", "보일러", "에어컨", "05.", "06.", "07.", "11.", "24.", "32.", "mep"]):
+        return "MEP"
+    if any(k in s for k in ["외장", "징크", "현관문", "창호", "폴딩", "지붕", "데크", "08.", "09.", "10.", "29.데크", "exterior"]):
+        return "EXTERIOR"
+    if any(k in s for k in ["도기", "수장", "경량", "타일", "마루", "도배", "마감", "도어", "스크린", "03.", "12.", "13.", "14.", "15.", "16.", "17.", "21.", "22.", "finish"]):
+        return "FINISH"
+    if any(k in s for k in ["크레인", "운반", "현장설치", "청소", "폐기물", "25.", "26.", "28.", "29. ", "30.", "31.", "site"]):
+        return "SITE"
+    if any(k in s for k in ["가구", "패키지", "데크", "어닝", "커튼", "iot", "프라이버시", "방충망", "베리어프리", "cs", "as", "처마", "목공", "토목", "차음재", "재설치", "33.", "34.", "furniture"]):
+        return "FURNITURE"
+    return "OTHER"
+
+
+def list_projects_for_backtest_v2(
+    enriched_con: sqlite3.Connection,
+    op_con: sqlite3.Connection | None = None,
+) -> list[dict]:
+    """sidecar projects_master에서 학습 가능 프로젝트 (cost_total >= 49M).
+    op_con 제공 시 module_types에서 area/pyeong/grade를 join, 없으면 module_code_hint에서 추정.
+    Returns one dict per project with keys compatible with `list_projects_for_backtest()`.
+    """
+    # Prepare op module_types lookup if op_con available
+    mt_by_code: dict[str, dict] = {}
+    if op_con is not None:
+        for r in op_con.execute("""
+            SELECT module_code, floor_area_m2, pyeong, structure_type,
+                   UPPER(COALESCE(finish_grade, 'UNKNOWN')) AS grade
+            FROM module_types
+            WHERE floor_area_m2 IS NOT NULL AND floor_area_m2 > 0
+        """):
+            mt_by_code[r["module_code"]] = dict(r)
+
+    rows = []
+    for r in enriched_con.execute("""
+        SELECT project_notion_id, name, module_code_hint, cost_row_count, cost_total
+        FROM projects_master
+        WHERE cost_total >= ?
+        ORDER BY cost_total DESC
+    """, (PROJECT_COST_THRESHOLD,)):
+        op_code = MODULE_HINT_TO_OP_CODE.get(r["module_code_hint"])
+        # Resolve module meta — op_db first, then estimate, else None (project drops from learning)
+        mt = mt_by_code.get(op_code) if op_code else None
+        if mt:
+            area = float(mt["floor_area_m2"])
+            pyeong = float(mt["pyeong"] or 0)
+            grade = mt["grade"]
+            structure = mt["structure_type"] or "STEEL"
+            module_code_eff = op_code
+        else:
+            est = _estimate_module_meta(r["module_code_hint"])
+            if est:
+                area = est["floor_area_m2"]
+                pyeong = est["pyeong"]
+                grade = est["grade"]
+                structure = est["structure_type"]
+                module_code_eff = r["module_code_hint"] or "ESTIMATED"
+            else:
+                area = pyeong = 0.0
+                grade = "UNKNOWN"
+                structure = "STEEL"
+                module_code_eff = None
+        rows.append({
+            "project_id":        _project_int_id(r["project_notion_id"]),
+            "project_code":      (r["name"] or "")[:20],
+            "project_name":      r["name"],
+            "module_code":       module_code_eff,
+            "module_code_hint":  r["module_code_hint"],
+            "floor_area_m2":     area,
+            "pyeong":            pyeong,
+            "grade":             grade,
+            "structure_type":    structure,
+            "actual_total":      r["cost_total"],
+            "row_count":         r["cost_row_count"],
+            "project_notion_id": r["project_notion_id"],
+        })
+    return rows
+
+
+NOISE_WORK_CODES = ("미해당", "32. 기타", "32.기타")
+
+
+def load_actual_samples_v2(
+    enriched_con: sqlite3.Connection,
+    op_con: sqlite3.Connection,
+    *,
+    cost_types: tuple[str, ...] = LEARNABLE_COST_TYPES,
+    statuses:   tuple[str, ...] = LEARNABLE_STATUS,
+    drop_mixed: bool = False,
+    exclude_noise_work_codes: bool = False,
+    use_all_statuses: bool = False,
+    outlier_pct: float | None = None,
+) -> list[dict]:
+    """sidecar 기반 학습 샘플. cost_type은 노션 '선택' 직접 매핑.
+
+    Args:
+        cost_types: 학습 input에 포함할 cost_type 라벨. 기본 (MAT,LAB,EXP,MIXED,ETC).
+        statuses:   포함할 status_code. 기본 ('입금완료',). 완화 시 LEARNABLE_STATUS_RELAXED.
+        drop_mixed: True면 MIXED 라벨 행 제외 (Q12 2차 escalation).
+
+    Returns rows with keys (model 호환):
+      project_id, project_code, module_code, normalized_work_code, work_name,
+      category, cost_type, cost_type_raw, amount,
+      floor_area_m2, pyeong, grade, structure_type, rate_per_m2
+    """
+    if drop_mixed:
+        cost_types = tuple(t for t in cost_types if t != "MIXED")
+
+    # 학습 가능 프로젝트 list (sidecar) — module meta 포함 (op_con 전달 시 op_db 매핑)
+    projects = list_projects_for_backtest_v2(enriched_con, op_con)
+    proj_by_notion = {p["project_notion_id"]: p for p in projects}
+
+    # 3. cost rows (sidecar) join + 그룹화
+    placeholders = ",".join("?" for _ in cost_types)
+    if use_all_statuses:
+        status_clause = ""
+        status_args = []
+    else:
+        statuses_ph  = ",".join("?" for _ in statuses)
+        status_clause = f"AND status_code IN ({statuses_ph})"
+        status_args = list(statuses)
+
+    noise_clause = ""
+    noise_args = []
+    if exclude_noise_work_codes:
+        noise_ph = ",".join("?" for _ in NOISE_WORK_CODES)
+        noise_clause = f"AND COALESCE(work_code_text,'') NOT IN ({noise_ph})"
+        noise_args = list(NOISE_WORK_CODES)
+
+    cost_rows = list(enriched_con.execute(f"""
+        SELECT project_notion_id, work_code_text, cost_type, cost_type_raw,
+               SUM(total_amount) AS amount, COUNT(*) AS row_count
+        FROM actual_costs_enriched
+        WHERE cost_type IN ({placeholders})
+          {status_clause}
+          {noise_clause}
+          AND project_notion_id IN ({",".join("?" for _ in proj_by_notion)})
+          AND total_amount > 0
+        GROUP BY project_notion_id, work_code_text, cost_type
+    """, [*cost_types, *status_args, *noise_args, *proj_by_notion.keys()]))
+
+    # 프로젝트는 list_projects_for_backtest_v2가 이미 floor_area_m2/grade/pyeong 해결한 상태로 반환.
+    # module_code_eff = None인 프로젝트는 학습 제외.
+    samples = []
+    for r in cost_rows:
+        proj = proj_by_notion.get(r["project_notion_id"])
+        if not proj or not proj["module_code"]:
+            continue
+        area = proj["floor_area_m2"]
+        amount = int(r["amount"] or 0)
+        if area <= 0 or amount <= 0:
+            continue
+        wc = (r["work_code_text"] or "UNKNOWN").strip() or "UNKNOWN"
+        samples.append({
+            "project_id":           proj["project_id"],
+            "project_code":         proj["project_code"],
+            "module_code":          proj["module_code"],
+            "normalized_work_code": wc,
+            "work_name":            wc,
+            "category":             _classify_work_code_category(wc),
+            "cost_type":            r["cost_type"],
+            "cost_type_raw":        r["cost_type_raw"],
+            "amount":               amount,
+            "floor_area_m2":        area,
+            "pyeong":               proj["pyeong"],
+            "grade":                proj["grade"],
+            "structure_type":       proj["structure_type"],
+            "rate_per_m2":          amount / area,
+        })
+
+    # Optional: outlier removal — (cost_type, normalized_work_code)별 rate_per_m2 P95 초과 제거
+    if outlier_pct is not None and 0 < outlier_pct < 1:
+        rates_by_key: dict[tuple, list[float]] = defaultdict(list)
+        for s in samples:
+            rates_by_key[(s["cost_type"], s["normalized_work_code"])].append(s["rate_per_m2"])
+        # Sort each group's rates and find threshold
+        thresholds: dict[tuple, float] = {}
+        for k, rs in rates_by_key.items():
+            if len(rs) < 4:  # 너무 작은 그룹은 outlier filter skip
+                continue
+            rs_sorted = sorted(rs)
+            idx = int(len(rs_sorted) * outlier_pct)
+            thresholds[k] = rs_sorted[min(idx, len(rs_sorted) - 1)]
+        samples = [
+            s for s in samples
+            if s["rate_per_m2"] <= thresholds.get(
+                (s["cost_type"], s["normalized_work_code"]), float("inf")
+            )
+        ]
+    return samples
+
+
 if __name__ == "__main__":
-    con = connect_readonly()
-    samples = load_actual_samples(con)
-    print(f"actual samples: {len(samples)}")
-    print(f"projects: {len({s['project_id'] for s in samples})}")
-    print(f"work_codes: {len({s['normalized_work_code'] for s in samples})}")
-    print(f"cost_types: {sorted({s['cost_type'] for s in samples})}")
+    if "--v2" in sys.argv:
+        op_con = connect_readonly()
+        en_con = connect_enriched()
+        samples = load_actual_samples_v2(en_con, op_con)
+        projects = list_projects_for_backtest_v2(en_con, op_con)
+        print(f"=== v2 (sidecar) ===")
+        print(f"learning samples: {len(samples)}")
+        print(f"learning projects: {len(projects)}")
+        print(f"  with module match: {len([p for p in projects if p['module_code']])}")
+        print(f"work_codes: {len({s['normalized_work_code'] for s in samples})}")
+        print(f"cost_types: {sorted({s['cost_type'] for s in samples})}")
+        print(f"categories: {sorted({s['category'] for s in samples})}")
+        en_con.close(); op_con.close()
+    else:
+        con = connect_readonly()
+        samples = load_actual_samples(con)
+        print(f"=== v1 (operational) ===")
+        print(f"actual samples: {len(samples)}")
+        print(f"projects: {len({s['project_id'] for s in samples})}")
+        print(f"work_codes: {len({s['normalized_work_code'] for s in samples})}")
+        print(f"cost_types: {sorted({s['cost_type'] for s in samples})}")
