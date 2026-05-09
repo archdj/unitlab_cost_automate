@@ -1,33 +1,28 @@
-# AI 기반 원가 예측 프로그램 (spec 2026-05-07)
+# AI 기반 원가 예측 프로그램 — 기획/진단 자료 (spec 2026-05-07)
 
 다운로드 폴더 명세서 `AI 기반 원가 예측 프로그램_기능명세서_2026-05-07.md` 기준 기획 묶음.
 
-| | |
-|---|---|
-| **카테고리** | 생산성 / 업무 |
-| **타겟** | 건설/제조 프로젝트 관리자, 원가 분석 담당자 |
-| **사용자 역할** | Admin |
-| **디바이스** | Web |
-| **명세서 작성일** | 2026-05-07 |
+> **2026-05-10 정리**: `src/` (v11.0-autocost-mvp reference 모델) + `requirements.txt`
+> 폐기. 운영 모델은 `unitlab-notion-cost/` (v10.0-notion) 으로 단일화.
+>
+> 이 디렉토리에 남은 자료:
+> - `PLAN.md` / `ROADMAP.md`: 마일스톤 + 7-condition KPI (흡수 트리거에서 격하)
+> - `docs/`: 기능별 명세 (MODEL/DATA_INGEST/MASTER_DATA/UI/AUTH_AUDIT/OPERATIONAL_DB_MAPPING)
+> - `harness/`: ETL 스크립트, sidecar `autocost_enriched.db` 빌드, 흡수 PR 분할 spec, 자재 wMAPE 진단 스크립트
+> - `reports/`: 측정 결과 JSON
 
-> **상태 (2026-05-07)**: M0+M1 MVP 동작. 명세서 §1.5 김대리 시나리오 (모듈 선택 → 예측 → 근거 + 결과 표시) 가 web UI 에서 실행됨.
-
-## 빠른 시작
+## 빠른 시작 (운영 모델)
 
 ```powershell
-pip install -r requirements.txt
-
-# M0 quality gate (운영 DB 데이터 품질 측정)
-python harness/scripts/profile_actual_costs.py
-python harness/scripts/measure_alias_coverage.py
-python harness/scripts/clean_vendor_names.py
+# 학습 + LOO backtest
+cd ../unitlab-notion-cost
+python src/backtest_v2.py
+python src/backtest_bootstrap.py
 
 # Web UI + API 서버
-python -m uvicorn src.api:app --port 8765
-# 브라우저: http://127.0.0.1:8765
+python -m uvicorn src.server:app --port 8001
+# 브라우저: http://127.0.0.1:8001/web/
 ```
-
-운영 DB 위치 override: `set AUTOCOST_DB=path\to\cost_analysis.db`.
 
 ## 동작 확인 결과 (2026-05-07)
 
