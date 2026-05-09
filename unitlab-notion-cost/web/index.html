@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>유닛랩 시공비 예측 v10.0-notion</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<style>
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  body { font-family: 'Noto Sans KR', sans-serif; background:#f1f5f9; overscroll-behavior:none; color:#0f172a; }
+
+  .topbar {
+    background:#0f2244; color:#fff; padding:0 20px; height:56px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:50;
+  }
+  .topbar .brand { font-weight:800; font-size:15px; letter-spacing:-0.2px; }
+  .topbar .brand small { font-weight:500; opacity:0.7; margin-left:6px; font-size:11px; }
+  .api-pill {
+    font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(255,255,255,0.1);
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .api-pill .dot { width:7px; height:7px; border-radius:50%; background:#94a3b8; }
+  .api-pill.ok .dot { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,0.2); }
+  .api-pill.err .dot { background:#ef4444; }
+
+  .container { max-width:1100px; margin:0 auto; padding:20px; }
+
+  .card { background:#fff; border-radius:12px; box-shadow:0 1px 8px rgba(0,0,0,0.06); }
+  .kpi-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 1px 8px rgba(0,0,0,0.06); border-top:4px solid #cbd5e1; }
+  .kpi-card.blue { border-top-color:#1e40af; }
+  .kpi-card.green { border-top-color:#16a34a; }
+  .kpi-card.amber { border-top-color:#f59e0b; }
+
+  .btn-primary {
+    background:#1e40af; color:#fff; padding:10px 18px; border-radius:10px;
+    font-size:13px; font-weight:600; border:none; cursor:pointer; transition:background 0.2s;
+    min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .btn-primary:active { background:#1e3a8a; transform:scale(0.97); }
+  .btn-primary:disabled { background:#94a3b8; cursor:not-allowed; }
+  .btn-secondary {
+    background:#f1f5f9; color:#475569; padding:10px 18px; border-radius:10px;
+    font-size:13px; font-weight:600; border:1px solid #e2e8f0; cursor:pointer;
+    min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .btn-ghost {
+    background:transparent; color:#64748b; padding:6px 10px; border-radius:8px;
+    font-size:12px; border:1px solid #e2e8f0; cursor:pointer;
+  }
+  .btn-ghost:hover { background:#f8fafc; color:#1e40af; }
+
+  .input-field {
+    width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:10px;
+    font-size:14px; font-family:inherit; outline:none; transition:border-color 0.2s;
+    min-height:44px; -webkit-appearance:none; background:#fff;
+  }
+  .input-field:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+  select.input-field {
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E") no-repeat right 12px center;
+    padding-right:32px;
+  }
+
+  .progress-bar { height:6px; border-radius:3px; background:#e2e8f0; overflow:hidden; display:inline-block; }
+  .progress-fill { height:100%; border-radius:3px; transition:width 0.5s ease; background:#3b82f6; }
+
+  .mode-btn {
+    padding:14px 8px; border-radius:12px; border:2px solid #e2e8f0; background:#fff;
+    color:#64748b; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;
+    text-align:center; min-height:60px;
+  }
+  .mode-btn .sub { font-size:10px; font-weight:400; opacity:0.7; margin-top:2px; }
+  .mode-btn.active { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; }
+
+  .module-row {
+    display:flex; gap:8px; align-items:center; padding:10px; background:#f8fafc;
+    border-radius:10px; border:1px solid #e2e8f0;
+  }
+  .module-row select { flex:1; }
+  .module-row input { width:80px; }
+  .module-row .remove-btn { background:#fee2e2; color:#dc2626; border:none; width:36px; height:36px; border-radius:8px; cursor:pointer; }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:#0f172a; color:#fff; padding:10px 18px; border-radius:10px; font-size:13px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.3); z-index:1000; opacity:0; transition:opacity 0.25s, transform 0.25s;
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(-6px); }
+  .toast.success { background:#16a34a; }
+  .toast.error { background:#dc2626; }
+
+  .fade-in { animation:fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .table-row:hover { background:#f8fafc; }
+
+  /* Mobile */
+  @media (max-width:768px) {
+    .container { padding:12px; }
+    .grid-cost-summary { grid-template-columns:1fr !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">유닛랩 시공비 예측 <small>v10.0-notion</small></div>
+  <div id="api-status" class="api-pill"><span class="dot"></span><span class="label">연결 중...</span></div>
+</div>
+
+<div class="container">
+
+  <!-- Step 1: 기본 정보 -->
+  <div class="card p-4 mb-4 fade-in">
+    <div class="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2">
+      <i class="fas fa-sliders text-blue-500"></i><span>① 기본 정보</span>
+    </div>
+
+    <label class="text-xs font-semibold text-gray-500 mb-2 block">예측 정밀도 (표시용 라벨)</label>
+    <div class="grid grid-cols-3 gap-2 mb-4">
+      <button class="mode-btn active" data-mode="rough" onclick="setMode('rough')">
+        <div>러프</div><div class="sub">±20%</div>
+      </button>
+      <button class="mode-btn" data-mode="bim_unit" onclick="setMode('bim_unit')">
+        <div>BIM 유닛</div><div class="sub">±10%</div>
+      </button>
+      <button class="mode-btn" data-mode="bim_final" onclick="setMode('bim_final')">
+        <div>BIM 확정</div><div class="sub">±5%</div>
+      </button>
+    </div>
+
+    <label class="text-xs font-semibold text-gray-500 mb-2 block">모듈 구성</label>
+    <div id="module-rows" class="space-y-2 mb-2"></div>
+    <button onclick="addModuleRow()" class="btn-ghost w-full mt-2">
+      <i class="fas fa-plus mr-1"></i> 모듈 추가
+    </button>
+
+    <div class="mt-4 flex gap-2 items-center text-xs text-gray-500">
+      <i class="fas fa-info-circle text-blue-400"></i>
+      <span>모듈 카탈로그 + 학습된 8개 프로젝트 기반. 단가는 work_code × cost_type 단위 학습값.</span>
+    </div>
+  </div>
+
+  <!-- Run -->
+  <div class="card p-4 mb-4 flex gap-2">
+    <button onclick="runEstimate()" id="run-btn" class="btn-primary flex-1">
+      <i class="fas fa-calculator"></i> 시공비 예측 실행
+    </button>
+    <button onclick="resetForm()" class="btn-secondary">
+      <i class="fas fa-rotate-left"></i> 초기화
+    </button>
+  </div>
+
+  <!-- Step 2: 결과 -->
+  <div id="result-section" style="display:none">
+
+    <!-- KPIs -->
+    <div id="result-summary" class="grid grid-cols-3 gap-3 mb-4 grid-cost-summary"></div>
+
+    <!-- 공정별 분해 -->
+    <div class="card p-4 mb-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-bold text-sm text-gray-700"><i class="fas fa-list-ol text-blue-500 mr-1"></i> 공종별 예상 원가</div>
+        <div id="result-total-badge" class="text-sm font-extrabold text-blue-700"></div>
+      </div>
+      <div id="breakdown-table" class="text-sm text-gray-400 text-center py-8">
+        <i class="fas fa-calculator text-gray-200 text-3xl mb-2 block"></i>
+        조건 입력 후 예측 실행하세요
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="card p-4">
+        <div class="font-bold text-xs text-gray-600 mb-3">카테고리별 비중</div>
+        <div style="height:240px"><canvas id="chart-pie"></canvas></div>
+      </div>
+      <div class="card p-4">
+        <div class="font-bold text-xs text-gray-600 mb-2">
+          <i class="fas fa-shield-halved text-orange-400 mr-1"></i> Applicability / 신뢰도 경고
+        </div>
+        <div id="result-warnings" class="space-y-1 text-xs text-gray-400">예측 실행 후 표시됩니다</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ── Config ──
+const API_BASE = window.location.origin.startsWith('http')
+  ? window.location.origin
+  : 'http://127.0.0.1:8001';
+
+// ── State ──
+const state = {
+  modules: [],          // [{module_type_id, module_code, module_name, pyeong, grade, floor_area_m2}]
+  mode: 'rough',
+  pieChart: null,
+};
+
+// ── Utils ──
+const formatKRW = n => {
+  if (n == null) return '-';
+  if (n >= 1e8) return `${(n/1e8).toFixed(2)}억`;
+  if (n >= 1e4) return `${(n/1e4).toFixed(0)}만`;
+  return n.toLocaleString();
+};
+const formatNum = n => (n == null ? '-' : Math.round(n).toLocaleString());
+const showToast = (msg, kind='info') => {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${kind}`;
+  setTimeout(() => { t.className = `toast ${kind}`; }, 2400);
+};
+const setApiStatus = (label, ok) => {
+  const el = document.getElementById('api-status');
+  el.className = `api-pill ${ok === true ? 'ok' : ok === false ? 'err' : ''}`;
+  el.querySelector('.label').textContent = label;
+};
+
+// Map work_code → 카테고리 (sandbox 색상 토큰)
+const CAT_MAP = {
+  'STR-ST':'구조','STR-RC':'구조','STR-WD':'구조',
+  'EXT-CLAD':'외피','EXT-WIN':'외피','EXT-DOOR':'외피','EXT-ROOF':'외피','EXT-DECK':'외피','EXT-INS':'외피',
+  'FIN-PANEL':'내장','FIN-FLOOR':'내장','FIN-CARP':'내장','FIN-TILE':'내장','FIN-PAINT':'내장','FIN-LGS':'내장','FIN-INS':'내장',
+  'MEP-ELEC':'MEP','MEP-PLMB':'MEP','MEP-HVAC':'MEP','MEP-FIRE':'MEP',
+  'FUR':'가구','FUR-DOOR':'가구','FUR-BATH':'가구','FUR-KIT':'가구',
+  'SITE':'현장','LOG':'물류','TR':'물류','OTHER':'기타',
+};
+const CAT_COLOR = {
+  '구조':'#3b82f6','외피':'#10b981','내장':'#f97316','MEP':'#8b5cf6',
+  '가구':'#f59e0b','현장':'#06b6d4','물류':'#0891b2','기타':'#94a3b8',
+};
+const catOf = wc => CAT_MAP[wc] || (wc?.startsWith('STR') ? '구조' : wc?.startsWith('EXT') ? '외피' : wc?.startsWith('FIN') ? '내장' : wc?.startsWith('MEP') ? 'MEP' : wc?.startsWith('FUR') ? '가구' : '기타');
+
+// ── API ──
+async function api(path, opts = {}) {
+  const url = `${API_BASE}${path}`;
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+// ── Load modules ──
+async function loadModules() {
+  try {
+    setApiStatus('연결 중...');
+    const [health, mods] = await Promise.all([
+      api('/api/notion/health'),
+      api('/api/notion/modules'),
+    ]);
+    state.modules = mods;
+    setApiStatus(`연결됨 · N=${health.total_projects} · ${health.cells} cells`, true);
+    if (state.modules.length === 0) {
+      showToast('모듈이 없습니다. DB 확인 필요', 'error');
+      return;
+    }
+    addModuleRow(); // 기본 1행
+  } catch (e) {
+    setApiStatus(`연결 실패: ${e.message}`, false);
+    showToast(`API 연결 실패: ${e.message}`, 'error');
+  }
+}
+
+// ── Module row UI ──
+function addModuleRow() {
+  if (!state.modules.length) {
+    showToast('모듈 카탈로그가 비어있습니다', 'error');
+    return;
+  }
+  const container = document.getElementById('module-rows');
+  const row = document.createElement('div');
+  row.className = 'module-row';
+  row.innerHTML = `
+    <select class="input-field module-select" style="min-height:38px">
+      ${state.modules.map(m =>
+        `<option value="${m.module_code}">${m.module_code} · ${m.pyeong}평 · ${m.grade}</option>`
+      ).join('')}
+    </select>
+    <input type="number" class="input-field module-count" value="1" min="1" step="1" style="min-height:38px;text-align:center;font-weight:600">
+    <button type="button" class="remove-btn" onclick="this.parentElement.remove()" title="제거">
+      <i class="fas fa-times"></i>
+    </button>`;
+  container.appendChild(row);
+}
+
+function getModuleSelections() {
+  const rows = document.querySelectorAll('#module-rows .module-row');
+  return Array.from(rows).map(r => {
+    const code = r.querySelector('.module-select').value;
+    const quantity = parseInt(r.querySelector('.module-count').value || '1', 10);
+    return { module_code: code, quantity };
+  }).filter(m => m.module_code && m.quantity > 0);
+}
+
+// ── Mode ──
+function setMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+}
+
+// ── Run estimate ──
+async function runEstimate() {
+  const selections = getModuleSelections();
+  if (selections.length === 0) {
+    showToast('모듈을 1개 이상 추가하세요', 'error');
+    return;
+  }
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 계산 중...';
+  try {
+    const result = await api('/api/notion/estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ modules: selections }),
+    });
+    renderResult(result, selections);
+    showToast('예측 완료', 'success');
+  } catch (e) {
+    showToast(`예측 실패: ${e.message}`, 'error');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-calculator"></i> 시공비 예측 실행';
+  }
+}
+
+// ── Render result ──
+function renderResult(result, selections) {
+  document.getElementById('result-section').style.display = '';
+
+  // 모듈별 결과 합산
+  let total = 0, lowerTotal = 0, upperTotal = 0;
+  // wc → {amount, lower, upper, samples, applicability_min, work_name, cases}
+  const wcAgg = {};
+
+  for (const m of (result.modules || [])) {
+    const pred = m.predicted || {};
+    const qty = m.quantity || 1;
+    total += (pred.total || 0) * qty;
+    lowerTotal += (pred.confidence_lower || 0) * qty;
+    upperTotal += (pred.confidence_upper || 0) * qty;
+
+    for (const item of (pred.breakdown || [])) {
+      const key = item.work_code;
+      if (!wcAgg[key]) {
+        wcAgg[key] = {
+          work_code: key,
+          work_name: item.work_name || key,
+          amount: 0, lower: 0, upper: 0,
+          samples: 0,
+          applicability_min: 1.0,
+          tier: item.applicability_tier,
+          cases: new Set(),
+        };
+      }
+      const a = wcAgg[key];
+      a.amount += (item.amount || 0) * qty;
+      a.lower  += (item.lower  || 0) * qty;
+      a.upper  += (item.upper  || 0) * qty;
+      a.samples = Math.max(a.samples, item.sample_count || 0);
+      a.applicability_min = Math.min(a.applicability_min, item.applicability ?? 1.0);
+      (item.source_cases || []).forEach(c => a.cases.add(c));
+    }
+  }
+
+  const totalArea = (result.modules || []).reduce(
+    (s, m) => s + (m.extended_area_m2 || 0) * (m.quantity || 1), 0
+  );
+
+  // KPI
+  const summary = document.getElementById('result-summary');
+  const ciPct = total > 0 ? (((upperTotal - lowerTotal) / 2) / total * 100) : 0;
+  const modeLabel = { rough:'러프', bim_unit:'BIM 유닛', bim_final:'BIM 확정' }[state.mode];
+  summary.innerHTML = `
+    <div class="kpi-card blue">
+      <div class="text-xs text-gray-400">총 예상 원가</div>
+      <div class="text-2xl font-extrabold text-blue-700">${formatKRW(total)}</div>
+      <div class="text-xs text-gray-400 mt-1">정밀도: ${modeLabel} · ±${ciPct.toFixed(1)}%</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="text-xs text-gray-400">95% 신뢰구간</div>
+      <div class="text-base font-bold text-green-700 leading-tight">${formatKRW(lowerTotal)} ~ ${formatKRW(upperTotal)}</div>
+      <div class="text-xs text-gray-400 mt-1">work_code 합산</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="text-xs text-gray-400">단위 면적당</div>
+      <div class="text-2xl font-extrabold text-amber-700">${totalArea > 0 ? formatNum(total / totalArea) + '원/m²' : '-'}</div>
+      <div class="text-xs text-gray-400 mt-1">연면적 ${totalArea.toFixed(1)}m²</div>
+    </div>`;
+  document.getElementById('result-total-badge').textContent = formatKRW(total);
+
+  // 공종 표
+  const rows = Object.values(wcAgg).sort((a, b) => b.amount - a.amount);
+  const tableEl = document.getElementById('breakdown-table');
+  tableEl.innerHTML = `
+    <div class="overflow-x-auto -mx-4 px-4">
+    <table class="w-full text-xs" style="min-width:560px">
+      <thead><tr class="border-b border-gray-100 text-gray-400 text-left">
+        <th class="pb-2">코드</th><th class="pb-2">공종</th>
+        <th class="pb-2 text-center">샘플</th>
+        <th class="pb-2 text-right">금액</th>
+        <th class="pb-2 text-right">하한~상한</th>
+        <th class="pb-2 text-center">비중</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr class="border-b border-gray-50 table-row">
+            <td class="py-2 font-mono text-blue-600">${r.work_code}</td>
+            <td class="py-2 font-semibold">${r.work_name}</td>
+            <td class="py-2 text-center text-gray-500">${r.samples}</td>
+            <td class="py-2 text-right font-bold">${formatNum(r.amount)}</td>
+            <td class="py-2 text-right text-gray-400 text-xs">${formatNum(r.lower)} ~ ${formatNum(r.upper)}</td>
+            <td class="py-2 text-center">
+              <div class="inline-flex items-center gap-1">
+                <div class="progress-bar" style="width:50px"><div class="progress-fill" style="width:${total > 0 ? (r.amount/total*100).toFixed(0) : 0}%; background:${CAT_COLOR[catOf(r.work_code)] || '#3b82f6'}"></div></div>
+                <span class="text-gray-400 text-xs">${total > 0 ? (r.amount/total*100).toFixed(0) : 0}%</span>
+              </div>
+            </td>
+          </tr>`).join('')}
+        <tr class="bg-blue-50 font-bold">
+          <td colspan="3" class="py-2 text-right text-gray-500 px-2">합 계</td>
+          <td class="py-2 text-right text-blue-700 font-extrabold">${formatNum(total)}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tbody>
+    </table></div>`;
+
+  // 카테고리 도넛
+  const catSum = {};
+  rows.forEach(r => { const c = catOf(r.work_code); catSum[c] = (catSum[c] || 0) + r.amount; });
+  const labels = Object.keys(catSum);
+  const data = Object.values(catSum);
+  const colors = labels.map(l => CAT_COLOR[l] || '#94a3b8');
+  const ctx = document.getElementById('chart-pie').getContext('2d');
+  if (state.pieChart) state.pieChart.destroy();
+  state.pieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family:'Noto Sans KR', size:10 }, padding:6, boxWidth:10 } },
+        tooltip: { callbacks: { label: c => `${c.label}: ${formatKRW(c.raw)} (${(c.raw/total*100).toFixed(1)}%)` } }
+      }
+    }
+  });
+
+  // applicability 경고
+  const warnings = [];
+  rows.forEach(r => {
+    if (r.applicability_min < 0.5) {
+      warnings.push({ kind:'warn', msg:`⚠️ ${r.work_code}: applicability ${(r.applicability_min*100).toFixed(0)}% — 학습 케이스 부족` });
+    }
+    if (r.samples < 3) {
+      warnings.push({ kind:'warn', msg:`⚠️ ${r.work_code}: 샘플 ${r.samples}건 — 신뢰도 낮음` });
+    }
+  });
+  // 신뢰구간 폭 큰 항목
+  rows.slice(0, 3).forEach(r => {
+    if (r.amount > 0) {
+      const ciW = (r.upper - r.lower) / r.amount * 100;
+      if (ciW > 50) warnings.push({ kind:'warn', msg:`⚠️ ${r.work_code}: CI 폭 ±${(ciW/2).toFixed(0)}%` });
+    }
+  });
+  const warnEl = document.getElementById('result-warnings');
+  warnEl.innerHTML = warnings.length
+    ? warnings.map(w => `<div class="py-1.5 border-b border-gray-50 ${w.kind==='ok'?'text-green-600':'text-orange-600'}">${w.msg}</div>`).join('')
+    : '<div class="text-green-600 font-semibold">✅ 모든 공종 applicability ≥ 50%, 샘플 ≥ 3건</div>';
+
+  document.getElementById('result-section').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── Reset ──
+function resetForm() {
+  document.getElementById('module-rows').innerHTML = '';
+  addModuleRow();
+  setMode('rough');
+  document.getElementById('result-section').style.display = 'none';
+  showToast('초기화 완료');
+}
+
+// ── Init ──
+window.addEventListener('DOMContentLoaded', loadModules);
+</script>
+</body>
+</html>

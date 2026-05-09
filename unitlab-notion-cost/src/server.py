@@ -15,6 +15,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from data_access import connect_readonly, list_modules, list_projects_for_backtest
@@ -45,6 +46,16 @@ def get_pool(force: bool = False) -> Pool:
     if _pool_cache is None or force:
         _pool_cache = build_pool()
     return _pool_cache
+
+
+_WEB_DIR = Path(__file__).resolve().parent.parent / "web"
+if _WEB_DIR.exists():
+    app.mount("/web", StaticFiles(directory=str(_WEB_DIR), html=True), name="web")
+
+
+@app.get("/")
+def root_redirect() -> dict:
+    return {"ok": True, "ui": "/web/", "api_prefix": "/api/notion"}
 
 
 @app.get("/api/notion/health")
