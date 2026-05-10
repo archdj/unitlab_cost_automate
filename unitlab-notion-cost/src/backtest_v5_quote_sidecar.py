@@ -40,18 +40,24 @@ MAT_LABEL = "MAT"
 # quote_lines work_code (영어 정규화) → sidecar work_code_text (한글/번호 형식) 매핑.
 # sidecar의 work_code_text는 노션 raw 한글 카테고리.
 # 무매핑 시 영어 신규 셀 추가만 됨 = 자재 actual dilution (검증: baseline 515M vs corrected 603M, +17%).
+# 2026-05-10 매핑 검증 후 (raw 자재 비교):
+#   ✅ 정확: STR-ST/FIN-PANEL/EXT-WIN/MEP-ELEC/MEP-HVAC/FUR-DOOR/EXT-DECK
+#   ✅ 데이터 일치: FIN-CARP→13.경량 (quote의 L1669/ㄴ형 코드는 LGS 경량철골 자재)
+#   ✅ 부분 일치 유지: FUR→14.수장/도어 (sidecar 14에 가구 일부 포함)
+#   ✏️ 수정: FIN-FLOOR→12.마루 → 11.바닥난방 (quote의 자재가 온수난방패널이라)
+#   ⚠️ 무용 유지: SITE-DEMO→토목 (sidecar MAT 0건이라 어차피 효과 0)
 QUOTE_WC_TO_SIDECAR = {
-    "STR-ST":   "01. 골조",       # 철골 = 골조
-    "FIN-PANEL": "02. 판넬",      # 샌드위치 판넬
-    "FIN-CARP":  "13. 경량",      # 목공/경량 목조
-    "FIN-FLOOR": "12. 마루",      # 바닥마감
-    "EXT-WIN":   "03. 창호",
-    "MEP-ELEC":  "05. 전기",
-    "MEP-HVAC":  "07. 환기/공조",
-    "FUR":       "14. 수장/도어",  # 가구인테리어 = 수장/도어 (sidecar에 'FUR' 코드도 일부 있지만 14. 수장/도어가 다수)
-    "FUR-DOOR":  "08. 현관문",
-    "EXT-DECK":  "29.데크",
-    "SITE-DEMO": "토목",
+    "STR-ST":   "01. 골조",       # H형강 / 삼남강재
+    "FIN-PANEL": "02. 판넬",      # 우레탄판넬 / 진호판넬
+    "FIN-CARP":  "13. 경량",      # LGS 경량철골 (quote의 L/ㄴ 코드)
+    "FIN-FLOOR": "11. 바닥난방",  # 온수난방패널 / 태경에스엔씨 — 12.마루 아님
+    "EXT-WIN":   "03. 창호",      # 창호 / 삼보에스앤씨
+    "MEP-ELEC":  "05. 전기",      # 조명 / 소노조명
+    "MEP-HVAC":  "07. 환기/공조",  # 공조 / 힘펠
+    "FUR":       "14. 수장/도어",  # 붙박이/가구 — 부분 일치
+    "FUR-DOOR":  "08. 현관문",    # 방화문
+    "EXT-DECK":  "29.데크",       # 데크 자재
+    "SITE-DEMO": "토목",          # sidecar MAT 0건 — 효과 0
 }
 
 
