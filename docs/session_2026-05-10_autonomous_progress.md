@@ -260,6 +260,49 @@ N=15 + sidecar 학습 풀에서 **point 19.1% 달성** — 메모리 시뮬 14~1
 3. **Phase 2 — production 적용** — data_access의 v2 query에 quote correction
    영구 통합 검토. /api/notion/estimate 결과에도 적용 가능.
 
+#### 4.10 N 확대 검증 (메모리 가정 정정)
+
+이전 메모리 "5건 module 매핑 보강" 실행 불가능 확정.
+
+| 프로젝트 | sidecar cost | hint | 진입 가능? |
+|---|---:|---|---|
+| N-08 용인 카페 2동 | 51.5M | U-6 | **이미 진입** (N=15 안) |
+| N-14 밸류맵 | 9.1M | None | ❌ cost<49M + hint=None |
+| N-15 청주 가마리 | 19.2M | None | ❌ |
+| N-17 롯데 팝업 | 35.4M | None | ❌ |
+| N-22 양평 | 49.7M | S-15 | **이미 진입** (estimate) |
+
+추가로 sidecar에만 있는 '테스트베드' (175M)도 hint=None + 운영 DB에 없음.
+
+→ **N=15가 현재 데이터 한계**. 추가 N 확대는 새 프로젝트 데이터 수집 필요.
+
+#### 4.11 v6 corrections + quote 결합 시도
+
+`unitlab-notion-cost/src/backtest_v6_combined.py` 신설.
+4-way 비교 (운영 DB N=8 베이스):
+
+| Condition | MAT proj-sum | Δ vs base | MAT cell | total wMAPE |
+|---|---:|---:|---:|---:|
+| v6.0 baseline | 26.3% | - | 39.9% | 21.8% |
+| v6.1 corrections only | 26.5% | +0.2pp | 44.2% | 21.5% |
+| **v6.2 quote only** (= v4) | **21.7%** | **-4.6pp** | 43.4% | 23.0% |
+| v6.3 BOTH | 25.1% | -1.2pp | 44.2% | 22.9% |
+
+**중요 결론**: corrections가 quote 효과를 **상쇄**. BOTH는 quote-only보다 +3.4pp 나쁨.
+**corrections 폐기 확정**. v6.2 (quote only) 가 best — production v10.1 적용 그대로.
+
+#### 4.12 자재 MAPE 개선 작업 — 최종 결론
+
+| 작업 | 결과 |
+|---|---|
+| 매핑 검증 | ✅ 완료 (FIN-FLOOR 수정 + 7개 정확) |
+| N 확대 | ❌ 데이터 한계 (N=15 max) |
+| Production 적용 | ✅ v10.1, POOL_MODE=v2 default |
+| corrections + quote 결합 | ❌ corrections가 quote 상쇄, 폐기 |
+
+**현재 production**: v10.1-notion-sidecar-quote (N=15, 81 cells, MAT proj-sum **19.1%**).
+14~16% 추가 도달은 새 프로젝트 데이터 수집 또는 다른 모델 구조 변경 후속 세션.
+
 ---
 
 ### 4 (Old). 자재 MAPE 개선 시도 — 자산 측정 + next step (사용자 자기 전 분석)
