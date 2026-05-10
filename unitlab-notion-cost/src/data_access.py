@@ -464,6 +464,178 @@ def load_actual_samples_v2(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Quote correction helpers (2026-05-10) — backtest_v5 검증된 -3~-5pp 자재 MAPE 개선
+#
+# sidecar `material_quote_lines` (견적서 line item) 의 amount 로 자재(MAT) 셀
+# actual 을 보정. project_code (N-XX) ↔ sidecar pid (notion hash) bridge,
+# work_code 영어 → 한글 매핑 필요.
+#
+# 검증 결과: 자재 wMAPE proj-sum
+#   v4 (운영 DB N=8):  26.3% → 21.7% (-4.6pp), bootstrap median -4.45pp
+#   v5 (sidecar N=15): 22.3% → 19.1% (-3.2pp), bootstrap median -3.15pp
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Quote work_code (영어 정규화) → sidecar work_code_text (한글) 매핑.
+# 2026-05-10 도메인 검증 후 (docs/quote_workcode_mapping_audit_2026-05-10.md).
+QUOTE_WC_TO_SIDECAR = {
+    "STR-ST":   "01. 골조",       # H형강 / 삼남강재
+    "FIN-PANEL": "02. 판넬",      # 우레탄판넬 / 진호판넬
+    "FIN-CARP":  "13. 경량",      # LGS 경량철골 (quote의 L/ㄴ 코드)
+    "FIN-FLOOR": "11. 바닥난방",  # 온수난방패널 / 태경에스앤씨
+    "EXT-WIN":   "03. 창호",
+    "MEP-ELEC":  "05. 전기",
+    "MEP-HVAC":  "07. 환기/공조",
+    "FUR":       "14. 수장/도어",
+    "FUR-DOOR":  "08. 현관문",
+    "EXT-DECK":  "29.데크",
+    "SITE-DEMO": "토목",          # sidecar MAT 0건이지만 LAB/EXP에 존재 — 매핑 유지
+}
+
+MAT_LABEL = "MAT"
+
+
+def build_pcode_to_sidecar_pid_bridge(
+    en_con: sqlite3.Connection,
+    op_con: sqlite3.Connection,
+) -> dict[str, int]:
+    """quote_lines.project_code (N-XX) → v2 sample.project_id (sidecar hash).
+
+    Bridge: op.projects(project_code, notion_page_id) ↔ sidecar projects_master.project_notion_id.
+    sidecar pid 는 _project_int_id(notion_page_id) hash.
+    """
+    op_pcode_to_nid = {
+        r["project_code"]: r["notion_page_id"]
+        for r in op_con.execute(
+            "SELECT project_code, notion_page_id FROM projects WHERE notion_page_id IS NOT NULL"
+        )
+    }
+    sidecar_nids = {
+        r["project_notion_id"]
+        for r in en_con.execute(
+            "SELECT project_notion_id FROM projects_master WHERE project_notion_id IS NOT NULL"
+        )
+    }
+    return {
+        pcode: _project_int_id(nid)
+        for pcode, nid in op_pcode_to_nid.items()
+        if nid in sidecar_nids
+    }
+
+
+def load_quote_sums_keyed_by_sidecar_pid(
+    en_con: sqlite3.Connection,
+    bridge: dict[str, int],
+) -> tuple[dict[tuple[int, str], float], dict]:
+    """quote_lines → (sidecar_pid, sidecar_work_code) → amount sum.
+
+    영어 work_code → 한글 work_code_text 매핑 (QUOTE_WC_TO_SIDECAR) 적용.
+    Returns (key_to_amount, stats).
+    """
+    raw = list(en_con.execute("""
+        SELECT project_code, work_code, SUM(amount) AS s
+        FROM material_quote_lines
+        WHERE project_code IS NOT NULL AND work_code IS NOT NULL AND amount IS NOT NULL
+        GROUP BY project_code, work_code
+    """))
+    out: dict[tuple, float] = defaultdict(float)
+    n_mapped = 0
+    n_skipped_proj = 0
+    n_skipped_wc = 0
+    total_amount_mapped = 0.0
+    for r in raw:
+        sidecar_pid = bridge.get(r["project_code"])
+        if sidecar_pid is None:
+            n_skipped_proj += 1
+            continue
+        sidecar_wc = QUOTE_WC_TO_SIDECAR.get(r["work_code"])
+        if sidecar_wc is None:
+            n_skipped_wc += 1
+            continue
+        out[(sidecar_pid, sidecar_wc)] += float(r["s"] or 0)
+        n_mapped += 1
+        total_amount_mapped += float(r["s"] or 0)
+    return dict(out), {
+        "n_quote_cells": len(raw),
+        "n_mapped": n_mapped,
+        "n_skipped_project": n_skipped_proj,
+        "n_skipped_workcode": n_skipped_wc,
+        "total_amount_mapped": int(total_amount_mapped),
+    }
+
+
+def apply_quote_corrections_to_samples(
+    samples: list[dict],
+    quote_keyed: dict[tuple[int, str], float],
+) -> tuple[list[dict], dict]:
+    """v2 sample list 에 quote correction in-place 적용.
+
+    - 같은 (project_id, work_code, MAT) 셀 존재 → amount 를 quote_sum 으로 대체
+    - 셀이 없으면 신규 추가 (학습 풀에 영어 work_code MAT 셀 추가)
+
+    rate_per_m2 = 0 이 되는 셀은 filter out.
+    Returns (corrected_samples, stats).
+    """
+    pid_to_meta: dict[int, dict] = {}
+    for s in samples:
+        if s["project_id"] not in pid_to_meta:
+            pid_to_meta[s["project_id"]] = s
+
+    keyed = {
+        (s["project_id"], s["normalized_work_code"], s["cost_type"]): s
+        for s in samples
+    }
+
+    n_replaced = 0
+    n_added = 0
+    delta_amount = 0
+    skipped_no_pool = 0
+
+    for (pid, wc), qsum in quote_keyed.items():
+        meta = pid_to_meta.get(pid)
+        if meta is None:
+            skipped_no_pool += 1
+            continue
+        key = (pid, wc, MAT_LABEL)
+        area = meta["floor_area_m2"]
+        if key in keyed:
+            old = keyed[key]["amount"]
+            keyed[key]["amount"] = int(qsum)
+            keyed[key]["rate_per_m2"] = qsum / area if area else 0
+            n_replaced += 1
+            delta_amount += abs(qsum - old)
+        else:
+            new_sample = {
+                "project_id":            pid,
+                "project_code":          meta["project_code"],
+                "module_code":           meta["module_code"],
+                "normalized_work_code":  wc,
+                "work_name":             wc,
+                "category":              "?",
+                "cost_type":             MAT_LABEL,
+                "cost_type_raw":         "재료비",
+                "amount":                int(qsum),
+                "floor_area_m2":         area,
+                "pyeong":                meta["pyeong"],
+                "grade":                 meta["grade"],
+                "structure_type":        meta["structure_type"],
+                "rate_per_m2":           qsum / area if area else 0,
+            }
+            if new_sample["rate_per_m2"] > 0:
+                samples.append(new_sample)
+                keyed[key] = new_sample
+                n_added += 1
+                delta_amount += qsum
+
+    samples = [s for s in samples if s.get("rate_per_m2", 0) > 0]
+    return samples, {
+        "n_replaced": n_replaced,
+        "n_added": n_added,
+        "delta_amount": int(delta_amount),
+        "skipped_no_pool": skipped_no_pool,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # v3: 운영 DB 기반 + PR-1 cost_type 컬럼 + sidecar corrections optional
 # ─────────────────────────────────────────────────────────────────────────────
 

@@ -1,14 +1,18 @@
-"""Standalone FastAPI for v10.0-notion. Run with:
+"""Standalone FastAPI for v10.1-notion-sidecar-quote. Run with:
 
     python -m uvicorn src.server:app --port 8001 --reload
 
-The same model functions are also imported by the main backend
-(unitlab-cost-analysis/web/backend/main.py) so this server is optional —
-useful for isolated testing or running the notion model on its own machine.
+학습 풀 (default v2 production):
+  - sidecar `autocost_enriched.db` (N=15, 학습 풀 풍부)
+  - quote correction 적용 (자재 wMAPE proj-sum -3.15pp 안정 개선)
+  - F scenario filter (noise wc 제외, all statuses, drop MIXED)
+
+POOL_MODE=v1 환경변수로 레거시 v1 (운영 DB N=8) 사용 가능.
 """
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -22,13 +26,20 @@ from data_access import connect_readonly, list_modules, list_projects_for_backte
 from notion_cost_model import (
     Pool,
     build_pool,
+    build_pool_v2,
     predict_for_module,
     predict_request,
     MODEL_VERSION,
+    MODEL_VERSION_V2,
 )
 from backtest import run as run_backtest
 
-app = FastAPI(title="Unitlab Notion-only Cost Model", version="10.0")
+POOL_MODE = os.environ.get("POOL_MODE", "v2").lower()  # default v2 production
+
+app = FastAPI(
+    title="Unitlab Notion Cost Model",
+    version="10.1" if POOL_MODE == "v2" else "10.0",
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -39,13 +50,25 @@ app.add_middleware(
 
 # In-process pool cache (rebuilds on demand)
 _pool_cache: Pool | None = None
+_pool_meta: dict | None = None
 
 
 def get_pool(force: bool = False) -> Pool:
-    global _pool_cache
+    global _pool_cache, _pool_meta
     if _pool_cache is None or force:
-        _pool_cache = build_pool()
+        if POOL_MODE == "v1":
+            _pool_cache = build_pool()
+            _pool_meta = {"model_version": MODEL_VERSION, "pool_mode": "v1"}
+        else:
+            _pool_cache, build_meta = build_pool_v2(apply_quote_corrections=True)
+            _pool_meta = {**build_meta, "pool_mode": "v2"}
     return _pool_cache
+
+
+def get_pool_meta() -> dict:
+    if _pool_meta is None:
+        get_pool()
+    return _pool_meta or {}
 
 
 _WEB_DIR = Path(__file__).resolve().parent.parent / "web"
@@ -61,12 +84,16 @@ def root_redirect() -> dict:
 @app.get("/api/notion/health")
 def health() -> dict:
     pool = get_pool()
+    meta = get_pool_meta()
     return {
         "ok": True,
-        "model_version": MODEL_VERSION,
+        "model_version": meta.get("model_version", MODEL_VERSION),
+        "pool_mode": meta.get("pool_mode", "?"),
         "samples": len(pool.samples),
         "cells": len(pool.by_key),
         "total_projects": pool.total_projects,
+        "quote_correction_applied": meta.get("quote_correction_applied", False),
+        "build_meta": meta,
     }
 
 
@@ -103,7 +130,14 @@ def estimate_raw(body: dict) -> dict:
 @app.post("/api/notion/refresh")
 def refresh() -> dict:
     pool = get_pool(force=True)
-    return {"ok": True, "samples": len(pool.samples), "cells": len(pool.by_key)}
+    meta = get_pool_meta()
+    return {
+        "ok": True,
+        "model_version": meta.get("model_version"),
+        "samples": len(pool.samples),
+        "cells": len(pool.by_key),
+        "total_projects": pool.total_projects,
+    }
 
 
 @app.get("/api/notion/backtest")
@@ -133,8 +167,10 @@ def pool_summary() -> dict:
         d["applicability"] = round(pool.applicability(d["work_code"], d["cost_types"][0]), 3)
         rows.append(d)
     rows.sort(key=lambda x: -x["amount"])
+    meta = get_pool_meta()
     return {
-        "model_version": MODEL_VERSION,
+        "model_version": meta.get("model_version", MODEL_VERSION),
+        "pool_mode": meta.get("pool_mode", "?"),
         "total_projects": pool.total_projects,
         "rows": rows,
     }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>유닛랩 시공비 예측 v10.0-notion</title>
+<title>유닛랩 시공비 예측</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -107,7 +107,7 @@
 <body>
 
 <div class="topbar">
-  <div class="brand">유닛랩 시공비 예측 <small>v10.0-notion</small></div>
+  <div class="brand">유닛랩 시공비 예측 <small id="brand-version">로딩...</small></div>
   <div id="api-status" class="api-pill"><span class="dot"></span><span class="label">연결 중...</span></div>
 </div>
 
@@ -255,7 +255,10 @@ async function loadModules() {
       api('/api/notion/modules'),
     ]);
     state.modules = mods;
-    setApiStatus(`연결됨 · N=${health.total_projects} · ${health.cells} cells`, true);
+    const v = document.getElementById('brand-version');
+    if (v) v.textContent = health.model_version || 'unknown';
+    const quoteTag = health.quote_correction_applied ? ' · quote ✓' : '';
+    setApiStatus(`연결됨 · N=${health.total_projects} · ${health.cells} cells${quoteTag}`, true);
     if (state.modules.length === 0) {
       showToast('모듈이 없습니다. DB 확인 필요', 'error');
       return;

@@ -27,12 +27,18 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from data_access import (
     connect_readonly,
+    connect_enriched,
     list_modules,
     load_actual_samples,
+    load_actual_samples_v2,
+    build_pcode_to_sidecar_pid_bridge,
+    load_quote_sums_keyed_by_sidecar_pid,
+    apply_quote_corrections_to_samples,
 )
 
 
 MODEL_VERSION = "v10.0-notion"
+MODEL_VERSION_V2 = "v10.1-notion-sidecar-quote"
 MIN_TIER_SAMPLES = 2   # tier 채택 최소 샘플 수
 TARGET_SAMPLE_FOR_FULL_CONFIDENCE = 8
 
@@ -335,10 +341,60 @@ def predict_request(pool: Pool, modules: list[dict]) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_pool() -> Pool:
+    """v1 학습 풀 (운영 DB only, N=8). cost_type=source_ref 버그 있음 — 레거시."""
     con = connect_readonly()
     samples = load_actual_samples(con)
     con.close()
     return Pool.from_samples(samples)
+
+
+def build_pool_v2(apply_quote_corrections: bool = True) -> tuple[Pool, dict]:
+    """v2 production 학습 풀 (sidecar N=15) + quote correction 옵션.
+
+    sidecar `actual_costs_enriched` (1420 cost rows, MAT/LAB/EXP/MIXED/ETC 정규화)
+    + DEFAULT_FILTERS (F scenario: noise wc 제외 + all statuses + drop MIXED).
+
+    apply_quote_corrections=True 시 sidecar `material_quote_lines` 의
+    (project_code, work_code) amount sum 으로 자재 셀 actual 보정 — 검증된
+    자재 wMAPE proj-sum -3.15pp 안정 개선.
+
+    Returns (pool, build_stats: dict).
+    """
+    # backtest_v2.DEFAULT_FILTERS 와 동일 (importing 하면 순환 참조 위험)
+    from data_access import LEARNABLE_COST_TYPES, LEARNABLE_STATUS_RELAXED
+    DEFAULT_FILTERS = dict(
+        cost_types=LEARNABLE_COST_TYPES,
+        statuses=LEARNABLE_STATUS_RELAXED,
+        drop_mixed=True,
+        exclude_noise_work_codes=True,
+        use_all_statuses=True,
+    )
+
+    op = connect_readonly()
+    en = connect_enriched()
+    samples = load_actual_samples_v2(en, op, **DEFAULT_FILTERS)
+    n_baseline = len(samples)
+    correction_stats = None
+
+    if apply_quote_corrections:
+        bridge = build_pcode_to_sidecar_pid_bridge(en, op)
+        quote_keyed, qstats = load_quote_sums_keyed_by_sidecar_pid(en, bridge)
+        # Make a deep-ish copy — apply_quote_corrections_to_samples mutates
+        samples = [dict(s) for s in samples]
+        samples, cstats = apply_quote_corrections_to_samples(samples, quote_keyed)
+        correction_stats = {**qstats, **cstats, "bridge_size": len(bridge)}
+
+    en.close(); op.close()
+    pool = Pool.from_samples(samples)
+    return pool, {
+        "model_version": MODEL_VERSION_V2 if apply_quote_corrections else "v10.1-notion-sidecar",
+        "n_baseline_samples": n_baseline,
+        "n_after_corrections": len(samples),
+        "n_projects": pool.total_projects,
+        "n_cells": len(pool.by_key),
+        "quote_correction_applied": apply_quote_corrections,
+        "correction_stats": correction_stats,
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
