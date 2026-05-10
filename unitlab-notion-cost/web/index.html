@@ -2,208 +2,462 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>유닛랩 시공비 예측</title>
-<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
 <style>
-  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-  body { font-family: 'Noto Sans KR', sans-serif; background:#f1f5f9; overscroll-behavior:none; color:#0f172a; }
+  * { box-sizing: border-box; }
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-2: #f4f4f5;
+    --border: #e4e4e7;
+    --border-strong: #d4d4d8;
+    --text: #18181b;
+    --text-2: #52525b;
+    --text-3: #a1a1aa;
+    --accent: #18181b;
+    --accent-text: #ffffff;
+    --link: #2563eb;
+    --pos: #15803d;
+    --neg: #b91c1c;
+    --warn: #a16207;
+  }
 
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13.5px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Top bar ── */
   .topbar {
-    background:#0f2244; color:#fff; padding:0 20px; height:56px;
-    display:flex; align-items:center; justify-content:space-between;
-    position:sticky; top:0; z-index:50;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
   }
-  .topbar .brand { font-weight:800; font-size:15px; letter-spacing:-0.2px; }
-  .topbar .brand small { font-weight:500; opacity:0.7; margin-left:6px; font-size:11px; }
-  .api-pill {
-    font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(255,255,255,0.1);
-    display:inline-flex; align-items:center; gap:6px;
+  .brand { font-weight: 700; font-size: 14px; letter-spacing: -0.2px; color: var(--text); }
+  .brand .ver {
+    font-weight: 500;
+    color: var(--text-3);
+    margin-left: 8px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
   }
-  .api-pill .dot { width:7px; height:7px; border-radius:50%; background:#94a3b8; }
-  .api-pill.ok .dot { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,0.2); }
-  .api-pill.err .dot { background:#ef4444; }
+  .api-status {
+    font-size: 12px;
+    color: var(--text-2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .api-status .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text-3);
+  }
+  .api-status.ok .dot { background: var(--pos); }
+  .api-status.err .dot { background: var(--neg); }
 
-  .container { max-width:1100px; margin:0 auto; padding:20px; }
+  /* ── Layout ── */
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  section { margin-bottom: 28px; }
+  section h2 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 0 0 12px;
+  }
 
-  .card { background:#fff; border-radius:12px; box-shadow:0 1px 8px rgba(0,0,0,0.06); }
-  .kpi-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 1px 8px rgba(0,0,0,0.06); border-top:4px solid #cbd5e1; }
-  .kpi-card.blue { border-top-color:#1e40af; }
-  .kpi-card.green { border-top-color:#16a34a; }
-  .kpi-card.amber { border-top-color:#f59e0b; }
+  /* ── Surfaces ── */
+  .surface {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .pad { padding: 18px 20px; }
+  .pad-tight { padding: 12px 16px; }
 
+  /* ── Form ── */
+  label.field-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .input, select.input, input.input {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .input:focus { border-color: var(--accent); }
+  select.input {
+    appearance: none;
+    background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2371717a' d='M5 6L0 0h10z'/%3E%3C/svg%3E") no-repeat right 10px center;
+    padding-right: 28px;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    height: 34px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid;
+    font-family: inherit;
+  }
   .btn-primary {
-    background:#1e40af; color:#fff; padding:10px 18px; border-radius:10px;
-    font-size:13px; font-weight:600; border:none; cursor:pointer; transition:background 0.2s;
-    min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
   }
-  .btn-primary:active { background:#1e3a8a; transform:scale(0.97); }
-  .btn-primary:disabled { background:#94a3b8; cursor:not-allowed; }
+  .btn-primary:hover { background: #000; }
+  .btn-primary:disabled { background: var(--text-3); border-color: var(--text-3); cursor: not-allowed; }
   .btn-secondary {
-    background:#f1f5f9; color:#475569; padding:10px 18px; border-radius:10px;
-    font-size:13px; font-weight:600; border:1px solid #e2e8f0; cursor:pointer;
-    min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border-strong);
   }
+  .btn-secondary:hover { background: var(--surface-2); }
   .btn-ghost {
-    background:transparent; color:#64748b; padding:6px 10px; border-radius:8px;
-    font-size:12px; border:1px solid #e2e8f0; cursor:pointer;
+    background: transparent;
+    color: var(--text-2);
+    border: 1px dashed var(--border-strong);
+    width: 100%;
   }
-  .btn-ghost:hover { background:#f8fafc; color:#1e40af; }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-3); background: var(--surface-2); }
 
-  .input-field {
-    width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:10px;
-    font-size:14px; font-family:inherit; outline:none; transition:border-color 0.2s;
-    min-height:44px; -webkit-appearance:none; background:#fff;
-  }
-  .input-field:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
-  select.input-field {
-    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E") no-repeat right 12px center;
-    padding-right:32px;
-  }
-
-  .progress-bar { height:6px; border-radius:3px; background:#e2e8f0; overflow:hidden; display:inline-block; }
-  .progress-fill { height:100%; border-radius:3px; transition:width 0.5s ease; background:#3b82f6; }
-
-  .mode-btn {
-    padding:14px 8px; border-radius:12px; border:2px solid #e2e8f0; background:#fff;
-    color:#64748b; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;
-    text-align:center; min-height:60px;
-  }
-  .mode-btn .sub { font-size:10px; font-weight:400; opacity:0.7; margin-top:2px; }
-  .mode-btn.active { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; }
-
+  /* ── Module rows ── */
   .module-row {
-    display:flex; gap:8px; align-items:center; padding:10px; background:#f8fafc;
-    border-radius:10px; border:1px solid #e2e8f0;
+    display: grid;
+    grid-template-columns: 1fr 80px 32px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
   }
-  .module-row select { flex:1; }
-  .module-row input { width:80px; }
-  .module-row .remove-btn { background:#fee2e2; color:#dc2626; border:none; width:36px; height:36px; border-radius:8px; cursor:pointer; }
+  .module-row .input { height: 32px; }
+  .module-row .x-btn {
+    width: 32px; height: 32px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-3);
+    font-size: 12px;
+  }
+  .module-row .x-btn:hover { color: var(--neg); border-color: var(--neg); }
 
+  /* ── KPI (numerical, no shadow) ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .kpi {
+    background: var(--surface);
+    padding: 16px 18px;
+  }
+  .kpi .label {
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .kpi .value {
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 4px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+  }
+  .kpi .sub {
+    font-size: 11.5px;
+    color: var(--text-2);
+    margin-top: 2px;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  thead th {
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    font-size: 11.5px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-strong);
+    background: var(--surface-2);
+  }
+  tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface-2); }
+  td.num, th.num { text-align: right; }
+  td.center, th.center { text-align: center; }
+
+  /* ── Bar / progress ── */
+  .bar { height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; display: inline-block; }
+  .bar-fill { height: 100%; background: var(--text); border-radius: 2px; transition: width 0.4s; }
+
+  /* ── Result section ── */
+  .result-summary { margin-bottom: 16px; }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .num { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ── Mode tabs (segmented control) ── */
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .seg button {
+    background: var(--surface);
+    border: none;
+    color: var(--text-2);
+    padding: 7px 14px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    border-right: 1px solid var(--border);
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button.active {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+
+  /* ── Toast ── */
   .toast {
-    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-    background:#0f172a; color:#fff; padding:10px 18px; border-radius:10px; font-size:13px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.3); z-index:1000; opacity:0; transition:opacity 0.25s, transform 0.25s;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--accent-text);
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
   }
-  .toast.show { opacity:1; transform:translateX(-50%) translateY(-6px); }
-  .toast.success { background:#16a34a; }
-  .toast.error { background:#dc2626; }
-
-  .fade-in { animation:fadeIn 0.25s ease; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-
-  .table-row:hover { background:#f8fafc; }
-
-  /* Mobile */
-  @media (max-width:768px) {
-    .container { padding:12px; }
-    .grid-cost-summary { grid-template-columns:1fr !important; }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
   }
+  .toast.error { background: var(--neg); }
+  .toast.success { background: var(--pos); }
+
+  /* ── Helpers ── */
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row.between { justify-content: space-between; }
+  .text-2 { color: var(--text-2); }
+  .text-3 { color: var(--text-3); }
+  .text-pos { color: var(--pos); }
+  .text-neg { color: var(--neg); }
+  .text-warn { color: var(--warn); }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .hint { font-size: 12px; color: var(--text-2); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ── Warning rows ── */
+  .warn-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--warn);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .warn-item:last-child { border-bottom: none; }
+  .warn-item.ok { color: var(--pos); }
+  .warn-item .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text);
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* ── Section header ── */
+  .surface-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background: var(--surface-2);
+  }
+  .surface-header .meta { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="brand">유닛랩 시공비 예측 <small id="brand-version">로딩...</small></div>
-  <div id="api-status" class="api-pill"><span class="dot"></span><span class="label">연결 중...</span></div>
+  <div class="brand">
+    유닛랩 시공비 예측
+    <span class="ver" id="brand-version">로딩…</span>
+  </div>
+  <div id="api-status" class="api-status"><span class="dot"></span><span class="label">연결 중…</span></div>
 </div>
 
 <div class="container">
 
-  <!-- Step 1: 기본 정보 -->
-  <div class="card p-4 mb-4 fade-in">
-    <div class="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2">
-      <i class="fas fa-sliders text-blue-500"></i><span>① 기본 정보</span>
-    </div>
-
-    <label class="text-xs font-semibold text-gray-500 mb-2 block">예측 정밀도 (표시용 라벨)</label>
-    <div class="grid grid-cols-3 gap-2 mb-4">
-      <button class="mode-btn active" data-mode="rough" onclick="setMode('rough')">
-        <div>러프</div><div class="sub">±20%</div>
-      </button>
-      <button class="mode-btn" data-mode="bim_unit" onclick="setMode('bim_unit')">
-        <div>BIM 유닛</div><div class="sub">±10%</div>
-      </button>
-      <button class="mode-btn" data-mode="bim_final" onclick="setMode('bim_final')">
-        <div>BIM 확정</div><div class="sub">±5%</div>
-      </button>
-    </div>
-
-    <label class="text-xs font-semibold text-gray-500 mb-2 block">모듈 구성</label>
-    <div id="module-rows" class="space-y-2 mb-2"></div>
-    <button onclick="addModuleRow()" class="btn-ghost w-full mt-2">
-      <i class="fas fa-plus mr-1"></i> 모듈 추가
-    </button>
-
-    <div class="mt-4 flex gap-2 items-center text-xs text-gray-500">
-      <i class="fas fa-info-circle text-blue-400"></i>
-      <span>모듈 카탈로그 + 학습된 8개 프로젝트 기반. 단가는 work_code × cost_type 단위 학습값.</span>
-    </div>
-  </div>
-
-  <!-- Run -->
-  <div class="card p-4 mb-4 flex gap-2">
-    <button onclick="runEstimate()" id="run-btn" class="btn-primary flex-1">
-      <i class="fas fa-calculator"></i> 시공비 예측 실행
-    </button>
-    <button onclick="resetForm()" class="btn-secondary">
-      <i class="fas fa-rotate-left"></i> 초기화
-    </button>
-  </div>
-
-  <!-- Step 2: 결과 -->
-  <div id="result-section" style="display:none">
-
-    <!-- KPIs -->
-    <div id="result-summary" class="grid grid-cols-3 gap-3 mb-4 grid-cost-summary"></div>
-
-    <!-- 공정별 분해 -->
-    <div class="card p-4 mb-4">
-      <div class="flex items-center justify-between mb-3">
-        <div class="font-bold text-sm text-gray-700"><i class="fas fa-list-ol text-blue-500 mr-1"></i> 공종별 예상 원가</div>
-        <div id="result-total-badge" class="text-sm font-extrabold text-blue-700"></div>
+  <!-- ── Inputs ── -->
+  <section>
+    <h2>입력</h2>
+    <div class="surface">
+      <div class="surface-header">
+        <span>조건</span>
+        <span class="meta">v10.1-notion-sidecar-quote</span>
       </div>
-      <div id="breakdown-table" class="text-sm text-gray-400 text-center py-8">
-        <i class="fas fa-calculator text-gray-200 text-3xl mb-2 block"></i>
-        조건 입력 후 예측 실행하세요
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="card p-4">
-        <div class="font-bold text-xs text-gray-600 mb-3">카테고리별 비중</div>
-        <div style="height:240px"><canvas id="chart-pie"></canvas></div>
-      </div>
-      <div class="card p-4">
-        <div class="font-bold text-xs text-gray-600 mb-2">
-          <i class="fas fa-shield-halved text-orange-400 mr-1"></i> Applicability / 신뢰도 경고
+      <div class="pad">
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:14px;align-items:center;margin-bottom:14px">
+          <label class="field-label" style="margin:0">예측 정밀도</label>
+          <div class="seg" role="tablist">
+            <button class="active" data-mode="rough" onclick="setMode('rough')">러프 ±20%</button>
+            <button data-mode="bim_unit" onclick="setMode('bim_unit')">BIM 유닛 ±10%</button>
+            <button data-mode="bim_final" onclick="setMode('bim_final')">BIM 확정 ±5%</button>
+          </div>
         </div>
-        <div id="result-warnings" class="space-y-1 text-xs text-gray-400">예측 실행 후 표시됩니다</div>
+
+        <label class="field-label">모듈 구성</label>
+        <div id="module-rows"></div>
+        <button onclick="addModuleRow()" class="btn btn-ghost" style="margin-top:6px">+ 모듈 추가</button>
+
+        <div class="row" style="margin-top:16px;gap:8px">
+          <button onclick="runEstimate()" id="run-btn" class="btn btn-primary" style="flex:1">시공비 예측 실행</button>
+          <button onclick="resetForm()" class="btn btn-secondary">초기화</button>
+        </div>
+
+        <p class="hint" style="margin:14px 0 0">
+          모듈 카탈로그 + sidecar 학습 풀 (N=15 / 81 cells) 기반.
+          단가는 work_code × cost_type 단위 학습값, quote correction 적용.
+        </p>
       </div>
     </div>
+  </section>
 
-  </div>
+  <!-- ── Result ── -->
+  <section id="result-section" style="display:none">
+    <h2>결과</h2>
+
+    <div id="result-kpis" class="kpi-grid result-summary"></div>
+
+    <div class="surface" style="margin-bottom:16px">
+      <div class="surface-header">
+        <span>공종별 분해</span>
+        <span class="meta" id="result-total-badge"></span>
+      </div>
+      <div id="breakdown-table"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="surface">
+        <div class="surface-header"><span>카테고리별 비중</span></div>
+        <div class="pad" style="height:240px"><canvas id="chart-pie"></canvas></div>
+      </div>
+      <div class="surface">
+        <div class="surface-header"><span>Applicability / 신뢰도</span></div>
+        <div id="result-warnings"></div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script>
-// ── Config ──
 const API_BASE = window.location.origin.startsWith('http')
   ? window.location.origin
   : 'http://127.0.0.1:8001';
 
-// ── State ──
-const state = {
-  modules: [],          // [{module_type_id, module_code, module_name, pyeong, grade, floor_area_m2}]
-  mode: 'rough',
-  pieChart: null,
-};
+const state = { modules: [], mode: 'rough', pieChart: null };
 
-// ── Utils ──
+// ── Categories (work_code → 카테고리) ──
+const CAT_MAP = {
+  'STR-ST':'구조','STR-RC':'구조','STR-WD':'구조','01. 골조':'구조',
+  'EXT-CLAD':'외피','EXT-WIN':'외피','EXT-DOOR':'외피','EXT-ROOF':'외피','EXT-DECK':'외피','EXT-INS':'외피',
+  '03. 창호':'외피','08. 현관문':'외피','09. 징크후레싱':'외피','10. 외장':'외피','29.데크':'외피',
+  'FIN-PANEL':'내장','FIN-FLOOR':'내장','FIN-CARP':'내장','FIN-TILE':'내장','FIN-PAINT':'내장','FIN-LGS':'내장','FIN-INS':'내장',
+  '02. 판넬':'내장','12. 마루':'내장','13. 경량':'내장','14. 수장/도어':'내장','15. 타일':'내장',
+  'MEP-ELEC':'MEP','MEP-PLMB':'MEP','MEP-HVAC':'MEP','MEP-FIRE':'MEP',
+  '05. 전기':'MEP','06. 설비':'MEP','07. 환기/공조':'MEP','11. 바닥난방':'MEP','16. 도기':'MEP',
+  'FUR':'가구','FUR-DOOR':'가구','FUR-BATH':'가구','FUR-KIT':'가구','18. 패키지':'가구','20. 가구':'가구',
+  'SITE':'현장','LOG':'물류','TR':'물류','OTHER':'기타','UNKNOWN':'기타',
+  '29. 현장설치':'현장','26. 운반':'물류','25. 입주청소':'현장','28. 하차크레인':'현장','31. 폐기물':'현장',
+};
+// 절제된 톤 — gray + 단색 액센트
+const CAT_COLOR = { '구조':'#3f3f46','외피':'#52525b','내장':'#71717a','MEP':'#27272a','가구':'#a1a1aa','현장':'#d4d4d8','물류':'#e4e4e7','기타':'#f4f4f5' };
+const catOf = wc => CAT_MAP[wc] || '기타';
+
 const formatKRW = n => {
   if (n == null) return '-';
   if (n >= 1e8) return `${(n/1e8).toFixed(2)}억`;
@@ -211,238 +465,163 @@ const formatKRW = n => {
   return n.toLocaleString();
 };
 const formatNum = n => (n == null ? '-' : Math.round(n).toLocaleString());
-const showToast = (msg, kind='info') => {
+
+function showToast(msg, kind='') {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = `toast show ${kind}`;
   setTimeout(() => { t.className = `toast ${kind}`; }, 2400);
-};
-const setApiStatus = (label, ok) => {
+}
+
+function setApiStatus(label, ok) {
   const el = document.getElementById('api-status');
-  el.className = `api-pill ${ok === true ? 'ok' : ok === false ? 'err' : ''}`;
+  el.className = `api-status ${ok === true ? 'ok' : ok === false ? 'err' : ''}`;
   el.querySelector('.label').textContent = label;
-};
+}
 
-// Map work_code → 카테고리 (sandbox 색상 토큰)
-const CAT_MAP = {
-  'STR-ST':'구조','STR-RC':'구조','STR-WD':'구조',
-  'EXT-CLAD':'외피','EXT-WIN':'외피','EXT-DOOR':'외피','EXT-ROOF':'외피','EXT-DECK':'외피','EXT-INS':'외피',
-  'FIN-PANEL':'내장','FIN-FLOOR':'내장','FIN-CARP':'내장','FIN-TILE':'내장','FIN-PAINT':'내장','FIN-LGS':'내장','FIN-INS':'내장',
-  'MEP-ELEC':'MEP','MEP-PLMB':'MEP','MEP-HVAC':'MEP','MEP-FIRE':'MEP',
-  'FUR':'가구','FUR-DOOR':'가구','FUR-BATH':'가구','FUR-KIT':'가구',
-  'SITE':'현장','LOG':'물류','TR':'물류','OTHER':'기타',
-};
-const CAT_COLOR = {
-  '구조':'#3b82f6','외피':'#10b981','내장':'#f97316','MEP':'#8b5cf6',
-  '가구':'#f59e0b','현장':'#06b6d4','물류':'#0891b2','기타':'#94a3b8',
-};
-const catOf = wc => CAT_MAP[wc] || (wc?.startsWith('STR') ? '구조' : wc?.startsWith('EXT') ? '외피' : wc?.startsWith('FIN') ? '내장' : wc?.startsWith('MEP') ? 'MEP' : wc?.startsWith('FUR') ? '가구' : '기타');
-
-// ── API ──
 async function api(path, opts = {}) {
-  const url = `${API_BASE}${path}`;
-  const r = await fetch(url, opts);
+  const r = await fetch(`${API_BASE}${path}`, opts);
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
   return r.json();
 }
 
-// ── Load modules ──
 async function loadModules() {
   try {
-    setApiStatus('연결 중...');
+    setApiStatus('연결 중…');
     const [health, mods] = await Promise.all([
-      api('/api/notion/health'),
-      api('/api/notion/modules'),
+      api('/api/notion/health'), api('/api/notion/modules'),
     ]);
     state.modules = mods;
-    const v = document.getElementById('brand-version');
-    if (v) v.textContent = health.model_version || 'unknown';
+    document.getElementById('brand-version').textContent = health.model_version || '';
     const quoteTag = health.quote_correction_applied ? ' · quote ✓' : '';
     setApiStatus(`연결됨 · N=${health.total_projects} · ${health.cells} cells${quoteTag}`, true);
-    if (state.modules.length === 0) {
-      showToast('모듈이 없습니다. DB 확인 필요', 'error');
-      return;
-    }
-    addModuleRow(); // 기본 1행
+    if (state.modules.length === 0) { showToast('모듈이 없습니다', 'error'); return; }
+    addModuleRow();
   } catch (e) {
-    setApiStatus(`연결 실패: ${e.message}`, false);
+    setApiStatus(`실패: ${e.message}`, false);
     showToast(`API 연결 실패: ${e.message}`, 'error');
   }
 }
 
-// ── Module row UI ──
 function addModuleRow() {
-  if (!state.modules.length) {
-    showToast('모듈 카탈로그가 비어있습니다', 'error');
-    return;
-  }
-  const container = document.getElementById('module-rows');
+  if (!state.modules.length) { showToast('모듈 카탈로그 비어있음', 'error'); return; }
+  const c = document.getElementById('module-rows');
   const row = document.createElement('div');
   row.className = 'module-row';
   row.innerHTML = `
-    <select class="input-field module-select" style="min-height:38px">
-      ${state.modules.map(m =>
-        `<option value="${m.module_code}">${m.module_code} · ${m.pyeong}평 · ${m.grade}</option>`
-      ).join('')}
+    <select class="input module-select">
+      ${state.modules.map(m => `<option value="${m.module_code}">${m.module_code} · ${m.pyeong}평 · ${m.grade}</option>`).join('')}
     </select>
-    <input type="number" class="input-field module-count" value="1" min="1" step="1" style="min-height:38px;text-align:center;font-weight:600">
-    <button type="button" class="remove-btn" onclick="this.parentElement.remove()" title="제거">
-      <i class="fas fa-times"></i>
-    </button>`;
-  container.appendChild(row);
+    <input type="number" class="input module-count" value="1" min="1" step="1" style="text-align:center">
+    <button type="button" class="x-btn" onclick="this.parentElement.remove()" title="제거">×</button>`;
+  c.appendChild(row);
 }
 
 function getModuleSelections() {
-  const rows = document.querySelectorAll('#module-rows .module-row');
-  return Array.from(rows).map(r => {
-    const code = r.querySelector('.module-select').value;
-    const quantity = parseInt(r.querySelector('.module-count').value || '1', 10);
-    return { module_code: code, quantity };
-  }).filter(m => m.module_code && m.quantity > 0);
+  return Array.from(document.querySelectorAll('#module-rows .module-row')).map(r => ({
+    module_code: r.querySelector('.module-select').value,
+    quantity: parseInt(r.querySelector('.module-count').value || '1', 10),
+  })).filter(m => m.module_code && m.quantity > 0);
 }
 
-// ── Mode ──
-function setMode(mode) {
-  state.mode = mode;
-  document.querySelectorAll('.mode-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.mode === mode);
-  });
+function setMode(m) {
+  state.mode = m;
+  document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
 }
 
-// ── Run estimate ──
 async function runEstimate() {
-  const selections = getModuleSelections();
-  if (selections.length === 0) {
-    showToast('모듈을 1개 이상 추가하세요', 'error');
-    return;
-  }
+  const sels = getModuleSelections();
+  if (sels.length === 0) { showToast('모듈을 1개 이상 추가하세요', 'error'); return; }
   const btn = document.getElementById('run-btn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 계산 중...';
+  btn.textContent = '계산 중…';
   try {
     const result = await api('/api/notion/estimate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ modules: selections }),
+      body: JSON.stringify({ modules: sels }),
     });
-    renderResult(result, selections);
+    renderResult(result, sels);
     showToast('예측 완료', 'success');
   } catch (e) {
-    showToast(`예측 실패: ${e.message}`, 'error');
-    console.error(e);
+    showToast(`실패: ${e.message}`, 'error');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-calculator"></i> 시공비 예측 실행';
+    btn.textContent = '시공비 예측 실행';
   }
 }
 
-// ── Render result ──
-function renderResult(result, selections) {
+function renderResult(result, sels) {
   document.getElementById('result-section').style.display = '';
 
-  // 모듈별 결과 합산
-  let total = 0, lowerTotal = 0, upperTotal = 0;
-  // wc → {amount, lower, upper, samples, applicability_min, work_name, cases}
+  let total = 0, lower = 0, upper = 0;
   const wcAgg = {};
-
   for (const m of (result.modules || [])) {
-    const pred = m.predicted || {};
+    const p = m.predicted || {};
     const qty = m.quantity || 1;
-    total += (pred.total || 0) * qty;
-    lowerTotal += (pred.confidence_lower || 0) * qty;
-    upperTotal += (pred.confidence_upper || 0) * qty;
-
-    for (const item of (pred.breakdown || [])) {
-      const key = item.work_code;
-      if (!wcAgg[key]) {
-        wcAgg[key] = {
-          work_code: key,
-          work_name: item.work_name || key,
-          amount: 0, lower: 0, upper: 0,
-          samples: 0,
-          applicability_min: 1.0,
-          tier: item.applicability_tier,
-          cases: new Set(),
-        };
-      }
-      const a = wcAgg[key];
-      a.amount += (item.amount || 0) * qty;
-      a.lower  += (item.lower  || 0) * qty;
-      a.upper  += (item.upper  || 0) * qty;
-      a.samples = Math.max(a.samples, item.sample_count || 0);
-      a.applicability_min = Math.min(a.applicability_min, item.applicability ?? 1.0);
-      (item.source_cases || []).forEach(c => a.cases.add(c));
+    total += (p.total || 0) * qty;
+    lower += (p.confidence_lower || 0) * qty;
+    upper += (p.confidence_upper || 0) * qty;
+    for (const it of (p.breakdown || [])) {
+      const k = it.work_code;
+      if (!wcAgg[k]) wcAgg[k] = { wc: k, name: it.work_name, amount: 0, lower: 0, upper: 0, samples: 0, app: 1 };
+      const a = wcAgg[k];
+      a.amount += (it.amount || 0) * qty;
+      a.lower  += (it.lower  || 0) * qty;
+      a.upper  += (it.upper  || 0) * qty;
+      a.samples = Math.max(a.samples, it.sample_count || 0);
+      a.app = Math.min(a.app, it.applicability ?? 1);
     }
   }
 
-  const totalArea = (result.modules || []).reduce(
-    (s, m) => s + (m.extended_area_m2 || 0) * (m.quantity || 1), 0
-  );
+  const totalArea = (result.modules || []).reduce((s, m) => s + (m.extended_area_m2 || 0) * (m.quantity || 1), 0);
+  const ciPct = total > 0 ? ((upper - lower) / 2 / total * 100) : 0;
+  const modeLabel = { rough: '러프', bim_unit: 'BIM 유닛', bim_final: 'BIM 확정' }[state.mode];
 
-  // KPI
-  const summary = document.getElementById('result-summary');
-  const ciPct = total > 0 ? (((upperTotal - lowerTotal) / 2) / total * 100) : 0;
-  const modeLabel = { rough:'러프', bim_unit:'BIM 유닛', bim_final:'BIM 확정' }[state.mode];
-  summary.innerHTML = `
-    <div class="kpi-card blue">
-      <div class="text-xs text-gray-400">총 예상 원가</div>
-      <div class="text-2xl font-extrabold text-blue-700">${formatKRW(total)}</div>
-      <div class="text-xs text-gray-400 mt-1">정밀도: ${modeLabel} · ±${ciPct.toFixed(1)}%</div>
-    </div>
-    <div class="kpi-card green">
-      <div class="text-xs text-gray-400">95% 신뢰구간</div>
-      <div class="text-base font-bold text-green-700 leading-tight">${formatKRW(lowerTotal)} ~ ${formatKRW(upperTotal)}</div>
-      <div class="text-xs text-gray-400 mt-1">work_code 합산</div>
-    </div>
-    <div class="kpi-card amber">
-      <div class="text-xs text-gray-400">단위 면적당</div>
-      <div class="text-2xl font-extrabold text-amber-700">${totalArea > 0 ? formatNum(total / totalArea) + '원/m²' : '-'}</div>
-      <div class="text-xs text-gray-400 mt-1">연면적 ${totalArea.toFixed(1)}m²</div>
-    </div>`;
+  document.getElementById('result-kpis').innerHTML = `
+    <div class="kpi"><div class="label">총 예상 원가</div><div class="value">${formatKRW(total)}</div><div class="sub">${modeLabel} · ±${ciPct.toFixed(1)}%</div></div>
+    <div class="kpi"><div class="label">95% 신뢰구간</div><div class="value" style="font-size:14px">${formatKRW(lower)} ~ ${formatKRW(upper)}</div><div class="sub">work_code 합산</div></div>
+    <div class="kpi"><div class="label">단위 면적당</div><div class="value">${totalArea > 0 ? formatNum(total / totalArea) : '-'}<span style="font-size:13px;color:var(--text-3);font-weight:500">원/m²</span></div><div class="sub">연면적 ${totalArea.toFixed(1)}m²</div></div>`;
+
   document.getElementById('result-total-badge').textContent = formatKRW(total);
 
-  // 공종 표
   const rows = Object.values(wcAgg).sort((a, b) => b.amount - a.amount);
-  const tableEl = document.getElementById('breakdown-table');
-  tableEl.innerHTML = `
-    <div class="overflow-x-auto -mx-4 px-4">
-    <table class="w-full text-xs" style="min-width:560px">
-      <thead><tr class="border-b border-gray-100 text-gray-400 text-left">
-        <th class="pb-2">코드</th><th class="pb-2">공종</th>
-        <th class="pb-2 text-center">샘플</th>
-        <th class="pb-2 text-right">금액</th>
-        <th class="pb-2 text-right">하한~상한</th>
-        <th class="pb-2 text-center">비중</th>
-      </tr></thead>
+  document.getElementById('breakdown-table').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>코드</th><th>공종</th><th class="center">샘플</th>
+          <th class="num">금액</th><th class="num">하한 ~ 상한</th><th class="num" style="width:120px">비중</th>
+        </tr>
+      </thead>
       <tbody>
         ${rows.map(r => `
-          <tr class="border-b border-gray-50 table-row">
-            <td class="py-2 font-mono text-blue-600">${r.work_code}</td>
-            <td class="py-2 font-semibold">${r.work_name}</td>
-            <td class="py-2 text-center text-gray-500">${r.samples}</td>
-            <td class="py-2 text-right font-bold">${formatNum(r.amount)}</td>
-            <td class="py-2 text-right text-gray-400 text-xs">${formatNum(r.lower)} ~ ${formatNum(r.upper)}</td>
-            <td class="py-2 text-center">
-              <div class="inline-flex items-center gap-1">
-                <div class="progress-bar" style="width:50px"><div class="progress-fill" style="width:${total > 0 ? (r.amount/total*100).toFixed(0) : 0}%; background:${CAT_COLOR[catOf(r.work_code)] || '#3b82f6'}"></div></div>
-                <span class="text-gray-400 text-xs">${total > 0 ? (r.amount/total*100).toFixed(0) : 0}%</span>
+          <tr>
+            <td class="mono">${r.wc}</td>
+            <td>${r.name}</td>
+            <td class="center text-2">${r.samples}</td>
+            <td class="num">${formatNum(r.amount)}</td>
+            <td class="num text-3" style="font-size:12px">${formatNum(r.lower)} ~ ${formatNum(r.upper)}</td>
+            <td class="num">
+              <div class="row" style="justify-content:flex-end;gap:8px">
+                <div class="bar" style="width:60px"><div class="bar-fill" style="width:${total > 0 ? (r.amount / total * 100).toFixed(0) : 0}%"></div></div>
+                <span class="text-2" style="font-size:12px;width:30px;text-align:right">${total > 0 ? (r.amount / total * 100).toFixed(0) : 0}%</span>
               </div>
             </td>
           </tr>`).join('')}
-        <tr class="bg-blue-50 font-bold">
-          <td colspan="3" class="py-2 text-right text-gray-500 px-2">합 계</td>
-          <td class="py-2 text-right text-blue-700 font-extrabold">${formatNum(total)}</td>
+        <tr style="background:var(--surface-2);font-weight:600">
+          <td colspan="3" class="num text-2">합 계</td>
+          <td class="num">${formatNum(total)}</td>
           <td colspan="2"></td>
         </tr>
       </tbody>
-    </table></div>`;
+    </table>`;
 
-  // 카테고리 도넛
+  // Donut chart
   const catSum = {};
-  rows.forEach(r => { const c = catOf(r.work_code); catSum[c] = (catSum[c] || 0) + r.amount; });
-  const labels = Object.keys(catSum);
-  const data = Object.values(catSum);
-  const colors = labels.map(l => CAT_COLOR[l] || '#94a3b8');
+  rows.forEach(r => { const c = catOf(r.wc); catSum[c] = (catSum[c] || 0) + r.amount; });
+  const labels = Object.keys(catSum), data = Object.values(catSum);
+  const colors = labels.map(l => CAT_COLOR[l] || '#a1a1aa');
   const ctx = document.getElementById('chart-pie').getContext('2d');
   if (state.pieChart) state.pieChart.destroy();
   state.pieChart = new Chart(ctx, {
@@ -451,47 +630,38 @@ function renderResult(result, selections) {
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { font: { family:'Noto Sans KR', size:10 }, padding:6, boxWidth:10 } },
-        tooltip: { callbacks: { label: c => `${c.label}: ${formatKRW(c.raw)} (${(c.raw/total*100).toFixed(1)}%)` } }
-      }
-    }
+        legend: { position: 'bottom', labels: { font: { family: 'Pretendard', size: 11 }, padding: 8, boxWidth: 8, color: '#52525b' } },
+        tooltip: { callbacks: { label: c => `${c.label}: ${formatKRW(c.raw)} (${(c.raw / total * 100).toFixed(1)}%)` } },
+      },
+    },
   });
 
-  // applicability 경고
+  // Warnings
   const warnings = [];
   rows.forEach(r => {
-    if (r.applicability_min < 0.5) {
-      warnings.push({ kind:'warn', msg:`⚠️ ${r.work_code}: applicability ${(r.applicability_min*100).toFixed(0)}% — 학습 케이스 부족` });
-    }
-    if (r.samples < 3) {
-      warnings.push({ kind:'warn', msg:`⚠️ ${r.work_code}: 샘플 ${r.samples}건 — 신뢰도 낮음` });
-    }
+    if (r.app < 0.5) warnings.push({ wc: r.wc, msg: `applicability ${(r.app * 100).toFixed(0)}%`, kind: '' });
+    if (r.samples < 3) warnings.push({ wc: r.wc, msg: `샘플 ${r.samples}건`, kind: '' });
   });
-  // 신뢰구간 폭 큰 항목
   rows.slice(0, 3).forEach(r => {
     if (r.amount > 0) {
-      const ciW = (r.upper - r.lower) / r.amount * 100;
-      if (ciW > 50) warnings.push({ kind:'warn', msg:`⚠️ ${r.work_code}: CI 폭 ±${(ciW/2).toFixed(0)}%` });
+      const w = (r.upper - r.lower) / r.amount * 100;
+      if (w > 50) warnings.push({ wc: r.wc, msg: `CI 폭 ±${(w / 2).toFixed(0)}%`, kind: '' });
     }
   });
-  const warnEl = document.getElementById('result-warnings');
-  warnEl.innerHTML = warnings.length
-    ? warnings.map(w => `<div class="py-1.5 border-b border-gray-50 ${w.kind==='ok'?'text-green-600':'text-orange-600'}">${w.msg}</div>`).join('')
-    : '<div class="text-green-600 font-semibold">✅ 모든 공종 applicability ≥ 50%, 샘플 ≥ 3건</div>';
+  document.getElementById('result-warnings').innerHTML = warnings.length
+    ? warnings.map(w => `<div class="warn-item"><span class="lab">${w.wc}</span><span>${w.msg}</span></div>`).join('')
+    : `<div class="warn-item ok"><span>✓ 모든 공종 applicability ≥ 50%, 샘플 ≥ 3건, CI 폭 ≤ 50%</span></div>`;
 
-  document.getElementById('result-section').scrollIntoView({ behavior:'smooth', block:'start' });
+  document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── Reset ──
 function resetForm() {
   document.getElementById('module-rows').innerHTML = '';
   addModuleRow();
   setMode('rough');
   document.getElementById('result-section').style.display = 'none';
-  showToast('초기화 완료');
 }
 
-// ── Init ──
 window.addEventListener('DOMContentLoaded', loadModules);
 </script>
 </body>
