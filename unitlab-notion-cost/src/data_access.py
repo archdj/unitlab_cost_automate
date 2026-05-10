@@ -8,6 +8,12 @@ v2 함수 (`load_actual_samples_v2`, `list_projects_for_backtest_v2`): sidecar a
   - cost_type은 노션 '선택' 컬럼 직접 매핑 (MAT/LAB/EXP/MIXED/ETC/RECUR/EXCL/OTHER).
   - 1420 cost rows / 16 학습 가능 프로젝트 (cost_total >= 49M).
   - module info는 운영 module_types에서 module_code_hint로 매칭.
+
+v3 함수 (`load_actual_samples_v3`): 운영 DB 기반 + PR-1 cost_type 컬럼 + corrections optional.
+  - PR-1 schema migration 후 운영 actual_costs.cost_type 백필됨 (931행 모두).
+  - apply_corrections=True 시 sidecar `actual_cost_corrections` LEFT JOIN → corrected_wc로 work_code 교체.
+  - corrections.actual_cost_id ↔ 운영 DB actual_cost_id 100% 매핑 (2026-05-10 검증).
+  - 학습 가능 프로젝트는 v1과 동일 (운영 module_types 기반, N=8).
 """
 from __future__ import annotations
 
@@ -454,6 +460,118 @@ def load_actual_samples_v2(
                 (s["cost_type"], s["normalized_work_code"]), float("inf")
             )
         ]
+    return samples
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# v3: 운영 DB 기반 + PR-1 cost_type 컬럼 + sidecar corrections optional
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def load_actual_samples_v3(
+    con: sqlite3.Connection,
+    *,
+    apply_corrections: bool = False,
+    corrections_con: sqlite3.Connection | None = None,
+    cost_types: tuple[str, ...] = LEARNABLE_COST_TYPES,
+    drop_mixed: bool = True,
+) -> list[dict]:
+    """운영 DB 기반 학습 샘플. PR-1 cost_type 컬럼 사용.
+
+    apply_corrections=True 시 sidecar `actual_cost_corrections.corrected_wc`로
+    work_code를 row 단위 override한 뒤 normalized_work_code 재계산.
+
+    Returns 동일한 dict shape (load_actual_samples 호환).
+    """
+    if apply_corrections and corrections_con is None:
+        corrections_con = connect_enriched()
+        _close_corrections = True
+    else:
+        _close_corrections = False
+
+    norm = workcode_normalize_map(con)
+    code_to_id = {
+        r["work_code"]: r["work_code_id"]
+        for r in con.execute("SELECT work_code_id, work_code FROM work_codes")
+    }
+
+    # corrections 적용: actual_cost_id → corrected work_code_id
+    correction_map: dict[int, int] = {}
+    if apply_corrections:
+        for r in corrections_con.execute("""
+            SELECT actual_cost_id, corrected_wc
+            FROM actual_cost_corrections
+            WHERE corrected_wc IS NOT NULL
+        """):
+            wcid = code_to_id.get(r["corrected_wc"])
+            if wcid is not None:
+                correction_map[r["actual_cost_id"]] = wcid
+        if _close_corrections:
+            corrections_con.close()
+
+    # 학습 cost_type 필터 (PR-1 컬럼)
+    cost_type_ph = ",".join("?" * len(cost_types))
+    raw = list(con.execute(f"""
+        SELECT
+          ac.actual_cost_id,
+          ac.project_id,
+          ac.work_code_id,
+          ac.cost_type,
+          ac.total_amount AS amount,
+          p.project_code,
+          mt.module_code,
+          mt.floor_area_m2,
+          mt.pyeong,
+          UPPER(COALESCE(mt.finish_grade, 'UNKNOWN')) AS grade,
+          mt.structure_type
+        FROM actual_costs ac
+        JOIN projects p           ON ac.project_id = p.project_id
+        LEFT JOIN project_modules pm ON p.project_id = pm.project_id
+        LEFT JOIN module_types mt    ON pm.module_type_id = mt.module_type_id
+        WHERE ac.total_amount > 0
+          AND ac.cost_type IN ({cost_type_ph})
+    """, cost_types))
+
+    grouped: dict[tuple, dict] = {}
+    for r in raw:
+        # corrected work_code_id 적용 (있으면)
+        wcid = correction_map.get(r["actual_cost_id"], r["work_code_id"])
+        if wcid not in norm:
+            continue
+        nwc = norm[wcid]
+        area = float(r["floor_area_m2"] or 0)
+        if area <= 0:
+            continue
+        cost_type = r["cost_type"]
+        # 학습 입력 옵션 — MIXED는 학습 풀에 포함, 자재 MAPE 측정에서만 분리.
+        # drop_mixed=True 시 학습에서도 제외.
+        if drop_mixed and cost_type == "MIXED":
+            continue
+        key = (r["project_id"], nwc["normalized_code"], cost_type)
+        if key in grouped:
+            grouped[key]["amount"] += int(r["amount"] or 0)
+        else:
+            grouped[key] = {
+                "project_id":            r["project_id"],
+                "project_code":          r["project_code"],
+                "module_code":           r["module_code"],
+                "normalized_work_code":  nwc["normalized_code"],
+                "work_name":             nwc["normalized_name"],
+                "category":              nwc["category"],
+                "cost_type":             cost_type,
+                "amount":                int(r["amount"] or 0),
+                "floor_area_m2":         area,
+                "pyeong":                float(r["pyeong"] or 0),
+                "grade":                 r["grade"],
+                "structure_type":        r["structure_type"] or "STEEL",
+            }
+
+    samples = []
+    for s in grouped.values():
+        s["rate_per_m2"] = s["amount"] / s["floor_area_m2"] if s["floor_area_m2"] else 0
+        if s["rate_per_m2"] <= 0:
+            continue
+        samples.append(s)
     return samples
 
 

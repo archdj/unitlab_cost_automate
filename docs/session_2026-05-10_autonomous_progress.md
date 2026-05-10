@@ -85,7 +85,79 @@ PR-1 미해결 잔여:
 - `package` 백필 (노션 ETL 패치 = `harness/migration/notion_etl_patch.md`).
 - unmatched 3건 + parent rows (memory 기록): 8/27 메타 미백필.
 
-### 4. 자재 MAPE 개선 시도 — 자산 측정 + next step
+### 4. 자재 MAPE 개선 시도 — corrections 적용 결과 (사용자 깬 후 추가 진행)
+
+**결론**: actual_cost_corrections (83건 changed, 17.2% / ₩69M) 적용 결과
+**자재 wMAPE +2.95pp 악화** (점추정 39.9% → 44.2%, bootstrap 200회 median
+38.7% → 41.6%, stdev 6.8%). **메모리 진단 검증** — 단순 work_code 재분류로는
+자재 MAPE 개선 불가능.
+
+#### 4.1 매핑 검증 (Step 1)
+
+| 매핑 | 결과 |
+|---|---|
+| `corrections.actual_cost_id` ↔ 운영 DB `actual_cost_id` | **100%** (483/483) ✅ |
+| corrections `corrected_wc` (27종) ↔ 운영 `work_codes.work_code` | **100%** ✅ |
+| corrections `original_wc` (22종) ↔ 운영 `work_codes.work_code` | **100%** ✅ |
+| corrections `actual_cost_id` ↔ sidecar `enriched_id` | 0% (다른 id 공간) |
+
+→ corrections는 **운영 DB 베이스**, sidecar 489 추가 회수분에는 적용 안 됨.
+
+#### 4.2 v3 함수 추가 (Step 2)
+
+`unitlab-notion-cost/src/data_access.py`:
+- `load_actual_samples_v3(con, *, apply_corrections, corrections_con, cost_types, drop_mixed)` 추가.
+- 운영 DB `actual_costs` 기반 + PR-1 cost_type 컬럼 사용.
+- `apply_corrections=True` 시 `actual_cost_corrections.corrected_wc`로 `work_code_id` row 단위 override.
+
+검증 (smoke):
+```
+v3 OFF: samples=224 projects=8 work_codes=23
+v3 ON : samples=240 projects=8 work_codes=26  (+3 새 work_code 셀)
+MAT total OFF == ON (corrections는 work_code 재분배만, amount 보전)
+```
+
+#### 4.3 backtest_v3 비교 측정 (Step 3)
+
+`unitlab-notion-cost/src/backtest_v3.py` 신설.
+
+| 지표 | OFF | ON | delta |
+|---|---:|---:|---:|
+| sample_count | 8 | 8 | 0 |
+| total wMAPE | 22.3% | 22.2% | -0.1pp |
+| total mae | 39.4% | 38.7% | -0.7pp |
+| hit-rate ±20% | 5/8 | 5/8 | 0 |
+| **MAT wMAPE** | **39.9%** | **44.2%** | **+4.3pp ❌** |
+| LAB wMAPE | 55.1% | 55.1% | 0 |
+| EXP wMAPE | 50.9% | 50.9% | 0 |
+| ETC wMAPE | 131.2% | 131.2% | 0 |
+
+Bootstrap (B=200, 70% subsample N=8): 자재 wMAPE
+- OFF: median 38.66%, stdev 6.96%
+- ON: median 41.61%, stdev 6.80%
+- **delta median: +2.95pp 악화** (안정 — noise 아님)
+
+#### 4.4 왜 악화?
+
+1. corrections evidence가 raw_desc 키워드 simple matching → false positive.
+2. 작은 N=8에서 work_code 셀 분산 → 학습 sample 부족 noise화.
+3. FIN-PANEL → EXT-ROOF 같은 재분배 시 EXT-ROOF 셀 sample이 부족해서 LOO 일반화 깨짐.
+
+#### 4.5 다음 세션 1순위 (개정)
+
+기존 추천(corrections row 매핑) **검증 결과 효과 없음**. 새 추천:
+1. **견적서 amount 적용 (`material_quote_lines` 588행, ₩286M)** — 메모리 진단 시뮬에서 21.7% → 14~16% 가능.
+2. corrections는 **잘못 분류된 row 식별**까지만 활용 (work_code 그 자체 강제 X).
+3. v2 (sidecar N=15) 기반에서 `actual_costs_enriched`의 amount/work_code를 quote_lines로 보정 후 backtest.
+4. 또는 학습 N 확대 — 더 많은 프로젝트 데이터 수집이 fundamentally 필요할 수도.
+
+**시뮬 스크립트 v11.0 의존성** (이전 risk):
+- `simulate_quote_corrected_wmape.py` 가 핵심. import 경로만 unitlab-notion-cost로 수정하면 자재 MAPE 진짜 개선 측정 가능.
+- 다음 세션에서 우선 작업.
+
+---
+
+### 4 (Old). 자재 MAPE 개선 시도 — 자산 측정 + next step (사용자 자기 전 분석)
 
 **시뮬 스크립트 깨짐**: `simulate_reclassification.py`, `simulate_quote_corrected_wmape.py` 등 14개가 폐기한 `autocost-spec/src/`의 `config.py`/`db.py`/`model.py` 등에 의존. `ModuleNotFoundError: No module named 'src'`.
 
