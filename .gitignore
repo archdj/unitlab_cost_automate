@@ -28,3 +28,6 @@ Thumbs.db
 
 # Excel BoQ 출력
 *.xlsx
+
+# Demo capture intermediates (HTML은 docs/에 commit, raw json + helper는 제외)
+.demo_capture/
