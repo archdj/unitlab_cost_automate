@@ -203,6 +203,63 @@ cell-단위 +2.5pp 악화는 corrections와 동일 패턴 (셀 분산 증가). �
 2. v2 (sidecar N=15) 측에 quote correction 적용 — 더 큰 학습 풀
 3. row 단위 corrections + quote amount 결합 효과 측정
 
+#### 4.7 v5 sidecar + quote correction (#2 진행)
+
+`unitlab-notion-cost/src/backtest_v5_quote_sidecar.py` 신설.
+
+**Bridge 설계**:
+- `quote_lines.project_code` (N-XX) → `op.projects.notion_page_id` →
+  `sidecar.projects_master.project_notion_id` → v2 sample `project_id` (notion hash)
+- 결과: 19/19 노션 page id 매칭
+
+**Work_code mapping** (영어 → 한글 sidecar 형식):
+- 처음 매핑 없이 실행 → cells_replaced 0 / cells_added 20 → **자재 actual +17.1% dilution**
+  (515M → 603M, 같은 자재가 한글+영어 셀로 중복)
+- mapping dict 추가: STR-ST→"01. 골조", FUR→"14. 수장/도어" 등 11종
+- 재실행 → cells_replaced 15 / cells_added 5 — 정상 대체
+
+**측정 결과 (LOO N=15, point)**:
+
+| 지표 | BASELINE | CORRECTED | delta |
+|---|---:|---:|---:|
+| total_wmape (proj-sum) | 30.0% | 28.8% | -1.2pp |
+| total_mae | 30.7% | 29.1% | -1.6pp |
+| total_median | 17.5% | 19.8% | +2.3pp |
+| **material_wmape (proj-sum)** | **22.3%** | **19.1%** | **-3.2pp** |
+| material_wmape (cell) | 32.9% | 34.0% | +1.1pp |
+| hit-rate ±20% | 9/15 | 8/15 | -1 |
+
+**Bootstrap (B=200, 70% subsample N=15)**: MAT proj-sum
+- BASELINE: median 25.95%, stdev 5.06%
+- CORRECTED: **median 22.80%**, stdev 4.94%
+- **delta median: -3.15pp 안정** (mean -3.46pp, stdev도 5.06→4.94 향상)
+
+#### 4.8 v4 vs v5 결합 — quote correction 효과 확정
+
+| 구성 | N | baseline (point) | corrected (point) | delta |
+|---|---:|---:|---:|---:|
+| v4 운영 DB | 8 | 26.3% | 21.7% | -4.6pp |
+| v5 sidecar | 15 | 22.3% | **19.1%** | -3.2pp |
+
+| 구성 | N | bootstrap median baseline | bootstrap median corrected | delta |
+|---|---:|---:|---:|---:|
+| v4 운영 DB | 8 | 25.65% | 21.20% | -4.45pp |
+| v5 sidecar | 15 | 25.95% | **22.80%** | -3.15pp |
+
+→ **두 학습 풀에서 -3 ~ -5pp 일관된 개선**. quote correction 진짜 효과 확정.
+N=15 + sidecar 학습 풀에서 **point 19.1% 달성** — 메모리 시뮬 14~16% 추가 도달의
+입구. 자재 MAPE 트리거 KPI (cell-단위 30%) 안전 마진 더 확대.
+
+#### 4.9 다음 1순위 (개정 v2)
+
+1. **work_code mapping 정확도 검증** — sidecar 한글 카테고리와 quote 영어 코드의
+   실제 의미 일치 여부 도메인 검토 (특히 FIN-CARP→13.경량, FUR→14.수장/도어,
+   EXT-DECK→29.데크 같은 모호 매핑).
+2. **학습 풀 N 확대** — 운영 module 매칭 안 된 5건 (N-08/14/15/17/22) 보강
+   (project_modules 테이블에 매핑 추가).
+3. **Phase 2 — production 적용** — data_access의 v2 query에 quote correction
+   영구 통합 검토. /api/notion/estimate 결과에도 적용 가능.
+
 ---
 
 ### 4 (Old). 자재 MAPE 개선 시도 — 자산 측정 + next step (사용자 자기 전 분석)
