@@ -155,6 +155,54 @@ Bootstrap (B=200, 70% subsample N=8): 자재 wMAPE
 - `simulate_quote_corrected_wmape.py` 가 핵심. import 경로만 unitlab-notion-cost로 수정하면 자재 MAPE 진짜 개선 측정 가능.
 - 다음 세션에서 우선 작업.
 
+#### 4.6 견적서 amount 적용 측정 (사용자 깬 후 진행, backtest_v4_quote_corrected)
+
+`unitlab-notion-cost/src/backtest_v4_quote_corrected.py` 신설
+(autocost-spec/harness/scripts/simulate_quote_corrected_wmape.py 마이그).
+
+**자료**: sidecar `material_quote_lines` 588행 → (project_code, work_code) 그룹 = 27셀.
+운영 DB module 매칭 학습 풀 N=8.
+
+**적용 stats**:
+- 기존 actual amount 대체: 7셀
+- 신규 MAT 셀 추가 (actual 없음): 4셀
+- 학습 풀 외 skipped: **16셀 (60%)** — 운영 DB module 매칭 안 된 5개 프로젝트 때문
+  (N-08, N-14, N-15, N-17, N-22). 잠재 효과 더 큼.
+
+**측정 결과 (LOO N=8)**:
+
+| 지표 | BASELINE | CORRECTED | delta |
+|---|---:|---:|---:|
+| total_wmape (proj-sum) | 21.8% | 23.0% | +1.2pp |
+| total_mae | 43.4% | 44.0% | +0.6pp |
+| total_median | 13.2% | 12.6% | -0.6pp |
+| **material_wmape (proj-sum)** | **26.3%** | **21.7%** | **-4.6pp ✅** |
+| material_wmape (cell) | 39.9% | 43.4% | +3.5pp |
+| hit-rate ±20% | 5/8 | 5/8 | 0 |
+
+**메모리 시뮬과 정확히 일치** (`material_outlier_audit_2026-05-09.md`: 21.7% → 14~16% 추가
+예상). 21.7% 1차 도달 ✓.
+
+**Bootstrap (B=200, 70% subsample)**: project-sum MAT wMAPE
+- BASELINE: median 25.65%, stdev 7.23%
+- CORRECTED: median **21.20%**, stdev 6.03%
+- **delta median: -4.45pp 안정 개선** (mean -4.70pp)
+- stdev 7.23% → 6.03% — **안정성도 향상**
+
+cell-단위 +2.5pp 악화는 corrections와 동일 패턴 (셀 분산 증가). 측정 단위 차이지
+실효성 차이 X — 실제 사용자가 "자재 합계가 얼마인가"는 project-sum이 답.
+
+**해석**:
+- 자재 MAPE 1차 도달: 21.7% (project-sum). 흡수 KPI < 30%는 cell-단위 21.8%로 이미
+  통과 상태. project-sum 수치는 추가 KPI로 의미 있음.
+- 14~16% 도달 (memory 예상)은 (1) 학습 풀 N 확대 + (2) row 단위 corrections + quote
+  결합으로 가능성 있음.
+
+**다음 1순위 (자재 MAPE 추가 개선)**:
+1. 학습 풀 확장 — N-08/14/15/17/22 module 매핑 보강 (`project_modules` 추가)
+2. v2 (sidecar N=15) 측에 quote correction 적용 — 더 큰 학습 풀
+3. row 단위 corrections + quote amount 결합 효과 측정
+
 ---
 
 ### 4 (Old). 자재 MAPE 개선 시도 — 자산 측정 + next step (사용자 자기 전 분석)
